@@ -59,7 +59,11 @@ pub async fn eval(input: &str) -> String {
             CreateExecOptions {
                 attach_stdout: Some(true),
                 attach_stderr: Some(true),
-                cmd: Some(vec!["octave", "--eval", input]),
+                cmd: Some(vec![
+                    "octave",
+                    "--eval",
+                    &(input.to_string() + "save(\"-\", \"*\");"),
+                ]),
                 ..Default::default()
             },
         )

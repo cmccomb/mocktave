@@ -44,7 +44,6 @@ impl From<String> for OctaveResults {
         let mut max_rows: usize = 0;
         let mut columns: usize = 0;
         for line in split_output {
-            // println!("{name} {currently_building}");
             if currently_building.len() == 0 {
                 if line.starts_with("# Created") {
                     continue;
@@ -74,7 +73,6 @@ impl From<String> for OctaveResults {
                         } else if !line.is_empty() {
                             let mut this_row = vec![];
                             for elem in line.split(" ") {
-                                println!("asdf: {elem}");
                                 if elem.is_empty() {
                                     continue;
                                 } else {

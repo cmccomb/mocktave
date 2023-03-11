@@ -6,3 +6,17 @@
 
 # Bringing Octave/MATLAB into the Rust ecosystem
 As much as I hate to say it, there is a lot of useful code living in .m files. Sometimes it might be nice to access that code in Rust. 
+
+# Example Usage
+```rust
+let script = "              \
+    z = 5.24;               \
+    m = z*inv(eye(5, 5));   \
+    m(1, 2) = 5;            \
+    a = 5;                  \
+    ";
+
+let y = mocktave::eval(script);
+
+println!("{y:#?}");
+```

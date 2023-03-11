@@ -39,10 +39,12 @@ impl From<String> for OctaveResults {
         let split_output = output.split("\n");
         let mut name: String = "".to_owned();
         let mut currently_building: String = "".to_owned();
-        let scalar: f64;
-        let matrix: Vec<Vec<f64>>;
+        let mut matrix: Vec<Vec<f64>> = vec![];
+        let mut current_row: usize = 0;
+        let mut max_rows: usize = 0;
+        let mut columns: usize = 0;
         for line in split_output {
-            println!("{name} {currently_building}");
+            // println!("{name} {currently_building}");
             if currently_building.len() == 0 {
                 if line.starts_with("# Created") {
                     continue;
@@ -58,7 +60,31 @@ impl From<String> for OctaveResults {
                         .insert(name.clone(), f64::from_str(line).unwrap());
                     currently_building = "".to_owned();
                 } else if currently_building == "matrix" && !line.is_empty() {
-                    currently_building = "".to_owned();
+                    if line.starts_with("# rows: ") {
+                        let current_row = 0;
+                        max_rows =
+                            usize::from_str(&*line.to_string().replace("# rows: ", "")).unwrap();
+                    } else if line.starts_with("# columns: ") {
+                        columns =
+                            usize::from_str(&*line.to_string().replace("# columns: ", "")).unwrap();
+                    } else {
+                        if current_row == max_rows {
+                            results.matrices.insert(name.clone(), matrix.clone());
+                            currently_building = "".to_owned();
+                        } else if !line.is_empty() {
+                            let mut this_row = vec![];
+                            for elem in line.split(" ") {
+                                println!("asdf: {elem}");
+                                if elem.is_empty() {
+                                    continue;
+                                } else {
+                                    this_row.push(f64::from_str(elem).unwrap());
+                                }
+                            }
+                            matrix.push(this_row);
+                            current_row += 1;
+                        }
+                    }
                 }
             }
         }
@@ -89,7 +115,7 @@ pub async fn eval(input: &str) -> OctaveResults {
         )
         .try_collect::<Vec<_>>()
         .await
-        .expect("Await fails?");
+        .expect("Could not create image.");
 
     let alpine_config = Config {
         image: Some(IMAGE),
@@ -100,12 +126,12 @@ pub async fn eval(input: &str) -> OctaveResults {
     let id = docker
         .create_container::<&str, &str>(None, alpine_config)
         .await
-        .expect("Await fails?")
+        .expect("Could not create container.")
         .id;
     docker
         .start_container::<String>(&id, None)
         .await
-        .expect("Await fails?");
+        .expect("Could not start container.");
 
     // non interactive
     let exec = docker
@@ -123,17 +149,19 @@ pub async fn eval(input: &str) -> OctaveResults {
             },
         )
         .await
-        .expect("Await fails?")
+        .expect("Could not create command to execute.")
         .id;
 
     let mut output_text = vec!["".to_string(); 0];
 
-    if let StartExecResults::Attached { mut output, .. } =
-        docker.start_exec(&exec, None).await.expect("Await fails?")
+    if let StartExecResults::Attached { mut output, .. } = docker
+        .start_exec(&exec, None)
+        .await
+        .expect("Execution of command failed.")
     {
         while let Some(Ok(msg)) = output.next().await {
             output_text.push(msg.to_string());
-            print!("{}", msg);
+            // print!("{}", msg);
         }
     } else {
         unreachable!();
@@ -148,7 +176,7 @@ pub async fn eval(input: &str) -> OctaveResults {
             }),
         )
         .await
-        .expect("Await fails?");
+        .expect("Could not remove container.");
 
     OctaveResults::from(output_text.join(""))
 }

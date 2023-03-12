@@ -87,12 +87,12 @@ impl From<String> for OctaveResults {
                     } else {
                         if !line.is_empty() {
                             let mut this_row = vec![];
-                            println!("{line}");
+                            // println!("{line}");
                             for elem in line.split(" ") {
                                 if elem.is_empty() {
                                     continue;
                                 } else {
-                                    println!("{elem}");
+                                    // println!("{elem}");
                                     this_row.push(f64::from_str(elem).unwrap());
                                 }
                             }

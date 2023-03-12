@@ -192,7 +192,7 @@ pub async fn eval(input: &str) -> OctaveResults {
                 cmd: Some(vec![
                     "octave",
                     "--eval",
-                    &(input.to_string() + ";save(\"-\", \"*\");"),
+                    &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
                 ]),
                 ..Default::default()
             },

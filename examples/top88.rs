@@ -2,7 +2,8 @@ use mocktave;
 
 fn main() {
     // This code adapted from here: https://github.com/blademwang11/Topopt/blob/master/top88.m
-    let script = "\
+    let script = "
+
     function xPhys = top88(nelx,nely,volfrac,penalMax,rmin)
         E0 = 1;
         Emin = 1e-9;
@@ -72,7 +73,9 @@ fn main() {
         endwhile
     endfunction
     
-    z = top88(30,10,0.5,3,3);";
+    z = top88(30,10,0.5,3,3);
+    
+    ";
 
     let y = mocktave::eval(script);
 

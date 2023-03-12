@@ -10,11 +10,13 @@ As much as I hate to say it, there is a lot of useful code living in .m files. S
 
 # Example Usage
 ```rust
-let script = "              \
-    z = 5.24;               \
-    m = z*inv(eye(5, 5));   \
-    m(1, 2) = 5;            \
-    a = 5;                  \
+let script = "
+
+    z = 5.24;
+    m = z*inv(eye(5, 5));
+    m(1, 2) = 5;
+    a = 5;
+
     ";
 
 let y = mocktave::eval(script);

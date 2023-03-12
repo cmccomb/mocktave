@@ -14,6 +14,7 @@ use bollard::image::CreateImageOptions;
 use futures_util::stream::StreamExt;
 use futures_util::TryStreamExt;
 
+/// Contains the workspace that resulted from running the octave command in `eval`
 #[derive(Debug)]
 pub struct OctaveResults {
     scalars: HashMap<String, f64>,
@@ -21,9 +22,11 @@ pub struct OctaveResults {
 }
 
 impl OctaveResults {
+    /// Get a scalar by name
     pub fn get_scalar_named(&self, name: &str) -> Option<&f64> {
         self.scalars.get(name)
     }
+    /// Get a matrix by name
     pub fn get_matrix_named(&self, name: &str) -> Option<&Vec<Vec<f64>>> {
         self.matrices.get(name)
     }
@@ -91,7 +94,7 @@ impl From<String> for OctaveResults {
     }
 }
 
-/// This is the only function ou need. It evaluates octave syntax.
+/// Evaluate lines of Octave code
 /// ```
 /// use mocktave::eval;
 /// let should_be_seven = eval("a = 5+2");

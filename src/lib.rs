@@ -15,23 +15,26 @@ use futures_util::TryStreamExt;
 /// Contains the workspace that resulted from running the octave command in `eval`
 #[derive(Debug)]
 pub struct OctaveResults {
+    /// Scalar variables
     scalars: HashMap<String, f64>,
+    /// Matrix variables
     matrices: HashMap<String, Vec<Vec<f64>>>,
+    /// String variables
     strings: HashMap<String, String>,
 }
 
 impl OctaveResults {
     /// Get a scalar by name
-    pub fn get_scalar_named(&self, name: &str) -> Option<&f64> {
-        self.scalars.get(name)
+    pub fn get_scalar_named(&self, name: &str) -> Option<f64> {
+        self.scalars.get(name).cloned()
     }
     /// Get a matrix by name
-    pub fn get_matrix_named(&self, name: &str) -> Option<&Vec<Vec<f64>>> {
-        self.matrices.get(name)
+    pub fn get_matrix_named(&self, name: &str) -> Option<Vec<Vec<f64>>> {
+        self.matrices.get(name).cloned()
     }
     /// Get a string by name
-    pub fn get_string_named(&self, name: &str) -> Option<&String> {
-        self.strings.get(name)
+    pub fn get_string_named(&self, name: &str) -> Option<String> {
+        self.strings.get(name).cloned()
     }
 }
 
@@ -137,11 +140,11 @@ impl From<String> for OctaveResults {
 /// Evaluate lines of Octave code and extract the results.
 /// ```
 /// let res = mocktave::eval("a = 5+2");
-/// assert_eq!(res.get_scalar_named("a").unwrap(), &7_f64);
+/// assert_eq!(res.get_scalar_named("a").unwrap(), 7_f64);
 /// ```
 /// ```
 /// let res = mocktave::eval("a = ones(2, 2)");
-/// assert_eq!(res.get_matrix_named("a").unwrap(), &vec![vec![1.0_f64; 2]; 2]);
+/// assert_eq!(res.get_matrix_named("a").unwrap(), vec![vec![1.0_f64; 2]; 2]);
 /// ```
 /// ```
 /// let res = mocktave::eval("a = 'asdf'");

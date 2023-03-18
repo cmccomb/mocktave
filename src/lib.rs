@@ -3,7 +3,6 @@
 #![doc = include_str!("../README.md")]
 
 use bollard::container::{Config, RemoveContainerOptions};
-use bollard::errors::Error;
 use bollard::Docker;
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -138,7 +137,7 @@ impl From<String> for OctaveResults {
     }
 }
 
-/// Evaluate lines of Octave code and extract the results.
+/// Evaluate a few lines of Octave code and extract the results.
 /// ```
 /// let res = mocktave::eval("a = 5+2");
 /// assert_eq!(res.get_scalar_named("a").unwrap(), 7_f64);
@@ -155,7 +154,8 @@ pub fn eval(input: &str) -> OctaveResults {
     Interpreter::default().eval(input)
 }
 
-/// Create a persistent interpeter that can be called multiple times with a single container.
+/// Create a persistent interpreter that can call a single container multiple times, resulting in
+/// more efficiency code execution.
 /// ```
 /// let mut interp = mocktave::Interpreter::default();
 /// let res1 = interp.eval("a = 5+2");
@@ -211,6 +211,7 @@ impl Default for Interpreter {
 }
 
 impl Interpreter {
+    /// This function does the heavy lifting in the interpreter struct.
     pub fn eval(&mut self, input: &str) -> OctaveResults {
         tokio::runtime::Runtime::new().unwrap().block_on(async {
             // non interactive
@@ -265,6 +266,6 @@ impl Drop for Interpreter {
                     ..Default::default()
                 }),
             ))
-            .expect("TODO: panic message");
+            .expect("Could not remove container.");
     }
 }

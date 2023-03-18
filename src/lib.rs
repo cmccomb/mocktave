@@ -152,15 +152,12 @@ impl From<String> for OctaveResults {
 /// assert_eq!(res.get_string_named("a").unwrap(), "asdf");
 /// ```
 pub fn eval(input: &str) -> OctaveResults {
-    let mut interpreter = Interpreter::default();
-    interpreter.start();
-    interpreter.eval(input)
+    Interpreter::default().eval(input)
 }
 
 /// Create a persistent interpeter that can be called multiple times with a single container.
 /// ```
 /// let mut interp = mocktave::Interpreter::default();
-/// interp.start();
 /// let res1 = interp.eval("a = 5+2");
 /// assert_eq!(res1.get_scalar_named("a").unwrap(), 7_f64);
 /// let res2 = interp.eval("a = ones(2, 2)");
@@ -170,109 +167,91 @@ pub fn eval(input: &str) -> OctaveResults {
 /// ```
 pub struct Interpreter {
     docker: Docker,
-    id: Option<String>,
-    image: String,
+    id: String,
 }
 
 impl Default for Interpreter {
     fn default() -> Self {
-        Interpreter {
-            docker: Docker::connect_with_socket_defaults()
-                .expect("Could not connect with socket defaults"),
-            id: None,
-            image: "mtmiller/octave:7.0.0".to_string(),
-        }
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            let docker = Docker::connect_with_socket_defaults()
+                .expect("Could not connect with socket defaults");
+            docker
+                .create_image(
+                    Some(CreateImageOptions {
+                        from_image: "mtmiller/octave:7.0.0",
+                        ..Default::default()
+                    }),
+                    None,
+                    None,
+                )
+                .try_collect::<Vec<_>>()
+                .await
+                .expect("Could not create image.");
+
+            let alpine_config = Config {
+                image: Some("mtmiller/octave:7.0.0"),
+                tty: Some(true),
+                ..Default::default()
+            };
+
+            let id = docker
+                .create_container::<&str, &str>(None, alpine_config)
+                .await
+                .expect("Could not create container.")
+                .id;
+
+            docker
+                .start_container::<String>(&id, None)
+                .await
+                .expect("Could not start container");
+
+            Interpreter { docker, id }
+        })
     }
 }
 
 impl Interpreter {
-    #[tokio::main]
-    pub async fn start(&mut self) -> Result<(), Error> {
-        self.docker
-            .create_image(
-                Some(CreateImageOptions {
-                    from_image: self.image.as_str(),
-                    ..Default::default()
-                }),
-                None,
-                None,
-            )
-            .try_collect::<Vec<_>>()
-            .await
-            .expect("Could not create image.");
-
-        let alpine_config = Config {
-            image: Some(self.image.as_str()),
-            tty: Some(true),
-            ..Default::default()
-        };
-
-        self.id = Some(
-            self.docker
-                .create_container::<&str, &str>(None, alpine_config)
+    pub fn eval(&mut self, input: &str) -> OctaveResults {
+        tokio::runtime::Runtime::new().unwrap().block_on(async {
+            // non interactive
+            let exec = self
+                .docker
+                .create_exec(
+                    &self.id.clone(),
+                    CreateExecOptions {
+                        attach_stdout: Some(true),
+                        attach_stderr: Some(true),
+                        cmd: Some(vec![
+                            "octave",
+                            "--eval",
+                            &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
+                        ]),
+                        ..Default::default()
+                    },
+                )
                 .await
-                .expect("Could not create container.")
-                .id,
-        );
+                .expect("Could not create command to execute.")
+                .id;
 
-        self.docker
-            .start_container::<String>(&self.id.clone().unwrap(), None)
-            .await
-    }
+            let mut output_text = vec!["".to_string(); 0];
 
-    #[tokio::main]
-    pub async fn eval(&mut self, input: &str) -> OctaveResults {
-        // non interactive
-        let exec = self
-            .docker
-            .create_exec(
-                &self.id.clone().unwrap(),
-                CreateExecOptions {
-                    attach_stdout: Some(true),
-                    attach_stderr: Some(true),
-                    cmd: Some(vec![
-                        "octave",
-                        "--eval",
-                        &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
-                    ]),
-                    ..Default::default()
-                },
-            )
-            .await
-            .expect("Could not create command to execute.")
-            .id;
-
-        let mut output_text = vec!["".to_string(); 0];
-
-        if let StartExecResults::Attached { mut output, .. } = self
-            .docker
-            .start_exec(&exec, None)
-            .await
-            .expect("Execution of command failed.")
-        {
-            while let Some(Ok(msg)) = output.next().await {
-                output_text.push(msg.to_string());
-                print!("{}", msg);
+            if let StartExecResults::Attached { mut output, .. } = self
+                .docker
+                .start_exec(&exec, None)
+                .await
+                .expect("Execution of command failed.")
+            {
+                while let Some(Ok(msg)) = output.next().await {
+                    output_text.push(msg.to_string());
+                    print!("{}", msg);
+                }
+            } else {
+                unreachable!();
             }
-        } else {
-            unreachable!();
-        }
 
-        OctaveResults::from(output_text.join(""))
+            OctaveResults::from(output_text.join(""))
+        })
     }
-
-    // #[tokio::main]
-    // pub async fn close(&self) -> Result<(), Error> {
-    //     self.docker
-    //         .remove_container(
-    //             &self.id.clone().unwrap(),
-    //             Some(RemoveContainerOptions {
-    //                 force: true,
-    //                 ..Default::default()
-    //             }),
-    //         )
-    //         .await
-    // }
 }
 
 impl Drop for Interpreter {
@@ -280,7 +259,7 @@ impl Drop for Interpreter {
         tokio::runtime::Runtime::new()
             .unwrap()
             .block_on(self.docker.remove_container(
-                &self.id.clone().unwrap(),
+                &self.id.clone(),
                 Some(RemoveContainerOptions {
                     force: true,
                     ..Default::default()

@@ -178,7 +178,8 @@ impl Default for Interpreter {
             docker
                 .create_image(
                     Some(CreateImageOptions {
-                        from_image: "mtmiller/octave:7.0.0",
+                        from_image: "mtmiller/octave",
+                        tag: "7.0.0",
                         ..Default::default()
                     }),
                     None,

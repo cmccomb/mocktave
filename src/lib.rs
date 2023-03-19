@@ -178,8 +178,8 @@ impl Default for Interpreter {
             docker
                 .create_image(
                     Some(CreateImageOptions {
-                        from_image: "mtmiller/octave",
-                        tag: "7.0.0",
+                        from_image: "gnuoctave/octave",
+                        tag: "8.1.0",
                         ..Default::default()
                     }),
                     None,
@@ -190,7 +190,7 @@ impl Default for Interpreter {
                 .expect("Could not create image.");
 
             let alpine_config = Config {
-                image: Some("mtmiller/octave:7.0.0"),
+                image: Some("gnuoctave/octave:8.1.0"),
                 tty: Some(true),
                 ..Default::default()
             };

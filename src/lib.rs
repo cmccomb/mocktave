@@ -213,7 +213,7 @@ impl Default for Interpreter {
 
 impl Interpreter {
     /// This function does the heavy lifting in the interpreter struct.
-    pub fn eval(&mut self, input: &str) -> OctaveResults {
+    pub fn eval(&self, input: &str) -> OctaveResults {
         tokio::runtime::Runtime::new().unwrap().block_on(async {
             // non interactive
             let exec = self

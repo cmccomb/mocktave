@@ -38,13 +38,19 @@ impl OctaveResults {
     }
 }
 
-impl From<String> for OctaveResults {
-    fn from(output: String) -> Self {
-        let mut results = OctaveResults {
+impl Default for OctaveResults {
+    fn default() -> Self {
+        OctaveResults {
             scalars: Default::default(),
             matrices: Default::default(),
             strings: Default::default(),
-        };
+        }
+    }
+}
+
+impl From<String> for OctaveResults {
+    fn from(output: String) -> Self {
+        let mut results = OctaveResults::default();
 
         let split_output = output.split("\n");
         let mut name: String = "".to_owned();

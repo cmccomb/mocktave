@@ -12,7 +12,7 @@ use futures_util::stream::StreamExt;
 use futures_util::TryStreamExt;
 
 use human_regex::{
-    any, beginning, digit, multi_line_mode, named_capture, one_or_more, or, text, whitespace, word,
+    any, beginning, digit, multi_line_mode, named_capture, one_or_more, text, whitespace, word,
     zero_or_more, zero_or_one,
 };
 use std::str::FromStr;
@@ -206,7 +206,7 @@ impl From<String> for OctaveResults {
                     );
                 }
                 &_ => {
-                    panic!("Type not recognized!")
+                    continue;
                 }
             }
         }

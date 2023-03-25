@@ -16,4 +16,5 @@ categories = ["parser-implementations"]
 [dependencies]
 bollard = {version="0.14.0", features = ["buildkit"]}
 futures-util = "0.3.27"
+human_regex = "0.3.0"
 tokio = "1.7"

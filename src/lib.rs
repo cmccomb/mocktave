@@ -5,13 +5,17 @@
 use bollard::container::{Config, RemoveContainerOptions};
 use bollard::Docker;
 use std::collections::HashMap;
-use std::str::FromStr;
 
 use bollard::exec::{CreateExecOptions, StartExecResults};
 use bollard::image::CreateImageOptions;
 use futures_util::stream::StreamExt;
 use futures_util::TryStreamExt;
 
+use human_regex::{
+    any, beginning, digit, multi_line_mode, named_capture, one_or_more, or, text, whitespace, word,
+    zero_or_more, zero_or_one,
+};
+use std::str::FromStr;
 
 pub mod cookbook;
 
@@ -53,95 +57,159 @@ impl Default for OctaveResults {
 
 impl From<String> for OctaveResults {
     fn from(output: String) -> Self {
+        let basic_info = beginning()
+            + text("# name: ")
+            + named_capture(one_or_more(word()), "name")
+            + whitespace()
+            + text("# type: ")
+            + named_capture(one_or_more(any()), "type");
+
+        let optional_matrix_data = zero_or_more(
+            whitespace()
+                + text("# rows: ")
+                + named_capture(one_or_more(digit()), "rows")
+                + whitespace()
+                + text("# columns: ")
+                + named_capture(one_or_more(digit()), "columns"),
+        );
+
+        let optional_string_data = zero_or_more(
+            whitespace()
+                + text("# elements: ")
+                + named_capture(one_or_more(digit()), "elements")
+                + whitespace()
+                + text("# length: ")
+                + named_capture(one_or_more(digit()), "length"),
+        );
+
+        let data_capture = zero_or_one(named_capture(
+            one_or_more(whitespace() + beginning() + one_or_more(any())),
+            "data",
+        ));
+
+        let complete_variable_match = multi_line_mode(
+            basic_info + optional_matrix_data + optional_string_data + data_capture + text("\n\n"),
+        );
+
         let mut results = OctaveResults::default();
 
-        let split_output = output.split("\n");
-        let mut name: String = "".to_owned();
-        let mut curently_reading: String = "".to_owned();
-        let mut matrix: Vec<Vec<f64>> = vec![];
-        let mut current_row: usize = 0;
-        let mut max_rows: usize = 0;
-        let mut columns: usize = 0;
-        for line in split_output {
-            if curently_reading.len() == 0 {
-                if line.starts_with("# Created") {
-                    continue;
-                } else if line.starts_with("# name: ") {
-                    name = line.to_string().replace("# name: ", "").replace("\n", "");
-                } else if line.starts_with("# type: ") {
-                    curently_reading = line
-                        .to_string()
-                        .replace("# type: ", "")
-                        .replace("\n", "")
-                        .replace("sq_", "")
+        for capture in complete_variable_match
+            .to_regex()
+            .captures_iter(&*output.replace("# type: diagonal matrix", "# type: diagonal_matrix"))
+        {
+            println!("{capture:?}");
+
+            let name = capture
+                .name("name")
+                .expect("Name not found")
+                .as_str()
+                .to_string();
+            let octave_type = capture.name("type").expect("No value for name.").as_str();
+            match octave_type {
+                "scalar" => {
+                    results.scalars.insert(
+                        name,
+                        f64::from_str(
+                            &*capture
+                                .name("data")
+                                .expect("No value for scalar data.")
+                                .as_str()
+                                .replace("\n", ""),
+                        )
+                        .expect("Could not parse f64 from string."),
+                    );
                 }
-            } else {
-                if curently_reading == "scalar" && !line.is_empty() {
-                    results
-                        .scalars
-                        .insert(name.clone(), f64::from_str(line).unwrap());
-                    curently_reading = "".to_owned();
-                } else if curently_reading == "string" && !line.is_empty() {
-                    if line.starts_with("# elements: ") || line.starts_with("# length: ") {
-                        continue;
-                    } else {
-                        results.strings.insert(name.clone(), line.parse().unwrap());
-                        curently_reading = "".to_owned();
-                    }
-                } else if curently_reading == "matrix" && !line.is_empty() {
-                    if line.starts_with("# rows: ") {
-                        current_row = 0;
-                        max_rows =
-                            usize::from_str(&*line.to_string().replace("# rows: ", "")).unwrap();
-                    } else if line.starts_with("# columns: ") {
-                        columns =
-                            usize::from_str(&*line.to_string().replace("# columns: ", "")).unwrap();
-                    } else {
-                        if !line.is_empty() {
-                            let mut this_row = vec![];
-                            // println!("{line}");
-                            for elem in line.split(" ") {
-                                if elem.is_empty() {
-                                    continue;
-                                } else {
-                                    // println!("{elem}");
-                                    this_row.push(f64::from_str(elem).unwrap());
+                "matrix" => {
+                    let rows = usize::from_str(
+                        &*capture.name("rows").expect("No key named rows.").as_str(),
+                    )
+                    .expect("Could not parse f64 from string.");
+                    let columns = usize::from_str(
+                        &*capture
+                            .name("columns")
+                            .expect("No key named columns.")
+                            .as_str(),
+                    )
+                    .expect("Could not parse f64 from string.");
+                    let mut matrix = vec![vec![0.0_f64; columns]; rows];
+                    matrix = match capture.name("data") {
+                        None => matrix,
+                        Some(s) => {
+                            let data = s
+                                .as_str()
+                                .replacen("\n ", "", 1)
+                                .replace("\n", "")
+                                .split(" ")
+                                .map(|elem| {
+                                    f64::from_str(elem).expect("Could not parse f64 from string.")
+                                })
+                                .collect::<Vec<f64>>();
+                            let mut counter: usize = 0;
+                            for i in 0..rows {
+                                for j in 0..columns {
+                                    matrix[i][j] = data[counter];
+                                    counter += 1;
                                 }
                             }
-                            matrix.push(this_row);
-                            current_row += 1;
+                            matrix
                         }
-                        if current_row == max_rows {
-                            results.matrices.insert(name.clone(), matrix.clone());
-                            matrix = vec![];
-                            curently_reading = "".to_owned();
+                    };
+
+                    results.matrices.insert(name, matrix);
+                }
+
+                "diagonal_matrix" => {
+                    let rows = usize::from_str(
+                        &*capture.name("rows").expect("No key named rows.").as_str(),
+                    )
+                    .expect("Could not parse f64 from string.");
+                    let columns = usize::from_str(
+                        &*capture
+                            .name("columns")
+                            .expect("No key named columns.")
+                            .as_str(),
+                    )
+                    .expect("Could not parse f64 from string.");
+                    let mut matrix = vec![vec![0.0_f64; columns]; rows];
+                    matrix = match capture.name("data") {
+                        None => matrix,
+                        Some(s) => {
+                            let data = s
+                                .as_str()
+                                .replacen("\n", "", 1)
+                                .replace("\n", " ")
+                                .split(" ")
+                                .map(|elem| {
+                                    f64::from_str(elem).expect("Could not parse f64 from string.")
+                                })
+                                .collect::<Vec<f64>>();
+                            let mut counter: usize = 0;
+                            for i in 0..rows {
+                                matrix[i][i] = data[counter];
+                                counter += 1;
+                            }
+                            matrix
                         }
-                    }
-                } else if curently_reading == "diagonal matrix" && !line.is_empty() {
-                    if line.starts_with("# rows: ") {
-                        current_row = 0;
-                        max_rows =
-                            usize::from_str(&*line.to_string().replace("# rows: ", "")).unwrap();
-                    } else if line.starts_with("# columns: ") {
-                        columns =
-                            usize::from_str(&*line.to_string().replace("# columns: ", "")).unwrap();
-                    } else {
-                        if !line.is_empty() {
-                            let mut this_row = vec![0.0_f64; columns];
-                            this_row[current_row] = f64::from_str(line).unwrap();
-                            matrix.push(this_row);
-                            current_row += 1;
-                        }
-                        if current_row == max_rows {
-                            results.matrices.insert(name.clone(), matrix.clone());
-                            matrix = vec![];
-                            curently_reading = "".to_owned();
-                        }
-                    }
+                    };
+
+                    results.matrices.insert(name, matrix);
+                }
+                // Catch the strings
+                "sq_string" | "string" => {
+                    results.strings.insert(
+                        name,
+                        capture
+                            .name("data")
+                            .expect("No value for scalar data.")
+                            .as_str()
+                            .replace("\n", ""),
+                    );
+                }
+                &_ => {
+                    panic!("Type not recognized!")
                 }
             }
         }
-
         results
     }
 }
@@ -181,94 +249,98 @@ pub struct Interpreter {
 
 impl Default for Interpreter {
     fn default() -> Self {
-        tokio::runtime::Runtime::new().unwrap().block_on(async {
-            let docker = Docker::connect_with_socket_defaults()
-                .expect("Could not connect with socket defaults");
-            docker
-                .create_image(
-                    Some(CreateImageOptions {
-                        from_image: "gnuoctave/octave",
-                        tag: "8.1.0",
-                        ..Default::default()
-                    }),
-                    None,
-                    None,
-                )
-                .try_collect::<Vec<_>>()
-                .await
-                .expect("Could not create image.");
+        tokio::runtime::Runtime::new()
+            .expect("Cannot create tokio runtime")
+            .block_on(async {
+                let docker = Docker::connect_with_socket_defaults()
+                    .expect("Could not connect with socket defaults");
+                docker
+                    .create_image(
+                        Some(CreateImageOptions {
+                            from_image: "gnuoctave/octave",
+                            tag: "8.1.0",
+                            ..Default::default()
+                        }),
+                        None,
+                        None,
+                    )
+                    .try_collect::<Vec<_>>()
+                    .await
+                    .expect("Could not create image.");
 
-            let alpine_config = Config {
-                image: Some("gnuoctave/octave:8.1.0"),
-                tty: Some(true),
-                ..Default::default()
-            };
+                let alpine_config = Config {
+                    image: Some("gnuoctave/octave:8.1.0"),
+                    tty: Some(true),
+                    ..Default::default()
+                };
 
-            let id = docker
-                .create_container::<&str, &str>(None, alpine_config)
-                .await
-                .expect("Could not create container.")
-                .id;
+                let id = docker
+                    .create_container::<&str, &str>(None, alpine_config)
+                    .await
+                    .expect("Could not create container.")
+                    .id;
 
-            docker
-                .start_container::<String>(&id, None)
-                .await
-                .expect("Could not start container");
+                docker
+                    .start_container::<String>(&id, None)
+                    .await
+                    .expect("Could not start container");
 
-            Interpreter { docker, id }
-        })
+                Interpreter { docker, id }
+            })
     }
 }
 
 impl Interpreter {
     /// This function does the heavy lifting in the interpreter struct.
     pub fn eval(&self, input: &str) -> OctaveResults {
-        tokio::runtime::Runtime::new().unwrap().block_on(async {
-            // non interactive
-            let exec = self
-                .docker
-                .create_exec(
-                    &self.id.clone(),
-                    CreateExecOptions {
-                        attach_stdout: Some(true),
-                        attach_stderr: Some(true),
-                        cmd: Some(vec![
-                            "octave",
-                            "--eval",
-                            &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
-                        ]),
-                        ..Default::default()
-                    },
-                )
-                .await
-                .expect("Could not create command to execute.")
-                .id;
+        tokio::runtime::Runtime::new()
+            .expect("Cannot create tokio runtime")
+            .block_on(async {
+                // non interactive
+                let exec = self
+                    .docker
+                    .create_exec(
+                        &self.id.clone(),
+                        CreateExecOptions {
+                            attach_stdout: Some(true),
+                            attach_stderr: Some(true),
+                            cmd: Some(vec![
+                                "octave",
+                                "--eval",
+                                &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
+                            ]),
+                            ..Default::default()
+                        },
+                    )
+                    .await
+                    .expect("Could not create command to execute.")
+                    .id;
 
-            let mut output_text = vec!["".to_string(); 0];
+                let mut output_text = vec!["".to_string(); 0];
 
-            if let StartExecResults::Attached { mut output, .. } = self
-                .docker
-                .start_exec(&exec, None)
-                .await
-                .expect("Execution of command failed.")
-            {
-                while let Some(Ok(msg)) = output.next().await {
-                    output_text.push(msg.to_string());
-                    print!("{}", msg);
+                if let StartExecResults::Attached { mut output, .. } = self
+                    .docker
+                    .start_exec(&exec, None)
+                    .await
+                    .expect("Execution of command failed.")
+                {
+                    while let Some(Ok(msg)) = output.next().await {
+                        output_text.push(msg.to_string());
+                        print!("{}", msg);
+                    }
+                } else {
+                    unreachable!();
                 }
-            } else {
-                unreachable!();
-            }
 
-            OctaveResults::from(output_text.join(""))
-        })
+                OctaveResults::from(output_text.join(""))
+            })
     }
 }
 
 impl Drop for Interpreter {
     fn drop(&mut self) {
         tokio::runtime::Runtime::new()
-            .unwrap()
+            .expect("Cannot create tokio runtime to to remove container")
             .block_on(self.docker.remove_container(
                 &self.id.clone(),
                 Some(RemoveContainerOptions {

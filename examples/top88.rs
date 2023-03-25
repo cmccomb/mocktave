@@ -71,7 +71,7 @@ fn main() {
         endwhile
     endfunction
     
-    z = top88(30,10,0.5,3,3);
+    z = top88(10,10,0.5,3,3);
     
     ";
 

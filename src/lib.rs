@@ -2,20 +2,19 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-use bollard::container::{Config, RemoveContainerOptions};
-use bollard::Docker;
-use std::collections::HashMap;
-
-use bollard::exec::{CreateExecOptions, StartExecResults};
-use bollard::image::CreateImageOptions;
-use futures_util::stream::StreamExt;
-use futures_util::TryStreamExt;
+use bollard::{
+    container::{Config, RemoveContainerOptions},
+    exec::{CreateExecOptions, StartExecResults},
+    image::CreateImageOptions,
+    Docker,
+};
+use futures_util::{stream::StreamExt, TryStreamExt};
+use std::{collections::HashMap, str::FromStr};
 
 use human_regex::{
     any, beginning, digit, multi_line_mode, named_capture, one_or_more, text, whitespace, word,
     zero_or_more, zero_or_one,
 };
-use std::str::FromStr;
 
 pub mod cookbook;
 
@@ -62,7 +61,7 @@ impl From<String> for OctaveResults {
             + named_capture(one_or_more(word()), "name")
             + whitespace()
             + text("# type: ")
-            + named_capture(one_or_more(any()), "type");
+            + named_capture(one_or_more(word()), "type");
 
         let optional_matrix_data = zero_or_more(
             whitespace()
@@ -92,13 +91,10 @@ impl From<String> for OctaveResults {
         );
 
         let mut results = OctaveResults::default();
-
         for capture in complete_variable_match
             .to_regex()
             .captures_iter(&*output.replace("# type: diagonal matrix", "# type: diagonal_matrix"))
         {
-            println!("{capture:?}");
-
             let name = capture
                 .name("name")
                 .expect("Name not found")

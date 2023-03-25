@@ -1,5 +1,3 @@
-use mocktave;
-
 fn main() {
     // This code adapted from here: https://www.topopt.mek.dtu.dk/apps-and-software/a-99-line-topology-optimization-code-written-in-matlab
     let script = "

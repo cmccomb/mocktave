@@ -12,6 +12,9 @@ use bollard::image::CreateImageOptions;
 use futures_util::stream::StreamExt;
 use futures_util::TryStreamExt;
 
+
+pub mod cookbook;
+
 /// Contains the workspace that resulted from running the octave command in `eval`
 #[derive(Debug)]
 pub struct OctaveResults {

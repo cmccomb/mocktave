@@ -1,5 +1,3 @@
-use mocktave;
-
 fn main() {
     // This code adapted from here: https://github.com/blademwang11/Topopt/blob/master/top88.m
     let script = "

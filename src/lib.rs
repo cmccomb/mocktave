@@ -22,6 +22,8 @@ pub mod cookbook;
 /// Contains the workspace that resulted from running the octave command in `eval`
 #[derive(Debug)]
 pub struct OctaveResults {
+    /// Raw output
+    pub raw: String,
     /// Scalar variables
     scalars: HashMap<String, f64>,
     /// Matrix variables
@@ -48,6 +50,7 @@ impl OctaveResults {
 impl Default for OctaveResults {
     fn default() -> Self {
         OctaveResults {
+            raw: "".to_string(),
             scalars: Default::default(),
             matrices: Default::default(),
             strings: Default::default(),
@@ -58,6 +61,8 @@ impl Default for OctaveResults {
 impl From<String> for OctaveResults {
     fn from(output: String) -> Self {
         let mut results = OctaveResults::default();
+
+        results.raw = output.clone();
 
         let scalar_match = multi_line_mode(
             beginning()

@@ -1,4 +1,8 @@
 //! # A Cookbook of Common Tasks
+//! ## Supported Types
+//! ```rust
+#![doc = include_str ! ("../examples/all_the_types.rs")]
+//! ```
 //! ## Wrap an Octave function
 //! ```rust
 #![doc = include_str ! ("../examples/primes.rs")]

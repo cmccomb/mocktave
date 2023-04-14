@@ -1,10 +1,11 @@
 use std::{collections::HashMap, str::FromStr};
 
-use regex::Captures;
+use regex::{Captures, Match};
 
+use crate::OctaveType::CellArray;
 use human_regex::{
     any, beginning, digit, end, exactly, multi_line_mode, named_capture, one_or_more, or,
-    printable, text, word, zero_or_more,
+    printable, text, whitespace, word, zero_or_more, zero_or_one,
 };
 
 /// Contains the workspace that resulted from running the octave command in `eval`
@@ -19,18 +20,41 @@ pub struct InterpreterResults {
     /// String variables
     strings: HashMap<String, String>,
     /// String variables
-    cell_arrays: HashMap<String, OctaveTypes>,
+    cell_arrays: HashMap<String, OctaveType>,
 }
 
 #[derive(Debug, Clone)]
-pub enum OctaveTypes {
+pub enum OctaveType {
     Scalar(f64),
     Matrix(Vec<Vec<f64>>),
     String(String),
-    CellArray(Vec<Vec<OctaveTypes>>),
+    CellArray(Vec<Vec<OctaveType>>),
+    Empty,
+}
+
+impl Default for OctaveType {
+    fn default() -> Self {
+        OctaveType::Empty
+    }
 }
 
 impl InterpreterResults {
+    /// Get unchecked
+    pub fn get_unchecked(&self, name: &str) -> OctaveType {
+        match self.get_scalar_named(name) {
+            None => match self.get_matrix_named(name) {
+                None => match self.get_string_named(name) {
+                    None => match self.get_cell_array_named(name) {
+                        None => OctaveType::Empty,
+                        Some(cell_array) => cell_array,
+                    },
+                    Some(string) => OctaveType::String(string),
+                },
+                Some(matrix) => OctaveType::Matrix(matrix),
+            },
+            Some(scalar) => OctaveType::Scalar(scalar),
+        }
+    }
     /// Get a scalar by name
     pub fn get_scalar_named(&self, name: &str) -> Option<f64> {
         self.scalars.get(name).cloned()
@@ -44,7 +68,7 @@ impl InterpreterResults {
         self.strings.get(name).cloned()
     }
     /// Get a string by name
-    pub fn get_cell_array_named(&self, name: &str) -> Option<OctaveTypes> {
+    pub fn get_cell_array_named(&self, name: &str) -> Option<OctaveType> {
         self.cell_arrays.get(name).cloned()
     }
 }
@@ -150,30 +174,37 @@ impl From<String> for InterpreterResults {
                 + named_capture(one_or_more(digit()), "columns"),
         );
 
+        let cell_element_match = multi_line_mode(
+            beginning()
+                + named_capture(text("# name: <cell-element>\n"), "name")
+                + text("# type: ")
+                + named_capture(one_or_more(word()), "type")
+                + text("\n# rows: ")
+                + zero_or_more(named_capture(one_or_more(digit()), "rows"))
+                + text("\n# columns: ")
+                + zero_or_more(named_capture(one_or_more(digit()), "columns"))
+                + text("\n# elements: ")
+                + zero_or_more(named_capture(one_or_more(digit()), "elements"))
+                + text("\n# length: ")
+                + zero_or_more(named_capture(one_or_more(digit()), "length"))
+                + zero_or_one(named_capture(
+                    one_or_more(whitespace() + beginning() + one_or_more(any())),
+                    "data",
+                )),
+        );
+
         for capture in cell_array_match.to_regex().captures_iter(&output) {
-            let (name, value) = parse_cell_array_capture(capture);
+            let (name, value) = parse_cell_array_capture(
+                capture,
+                cell_element_match
+                    .to_regex()
+                    .captures_iter(&output)
+                    .map(|x| x)
+                    .collect::<Vec<Captures>>(),
+            );
             results.cell_arrays.insert(name, value);
         }
 
-        // let cell_element_match = multi_line_mode(
-        //     beginning()
-        //         + text("# name: <cell-element>\n")
-        //         + text("# type: ")
-        //         + named_capture(one_or_more(word()), "type")
-        //         + zero_or_more(text("\n# ") + one_or_more(any()))
-        //         + zero_or_one(named_capture(
-        //             one_or_more(whitespace() + beginning() + one_or_more(any())),
-        //             "data",
-        //         )),
-        // );
-        //
-        // for capture in cell_match.to_regex().captures_iter(&*output) {
-        //     println!("CELL: {capture:?}");
-        // }
-        //
-        // for capture in cell_element_match.to_regex().captures_iter(&*output) {
-        //     println!("CELL-ELEMENT: {capture:?}");
-        // }
         results
     }
 }
@@ -212,7 +243,12 @@ fn parse_string_capture(capture: Captures) -> (String, String) {
     )
 }
 
-fn parse_cell_array_capture(capture: Captures) -> (String, OctaveTypes) {
+fn parse_cell_array_capture(
+    capture: Captures,
+    mut elements: Vec<Captures>,
+) -> (String, OctaveType) {
+    println!("{elements:?}");
+
     let name = capture
         .name("name")
         .expect("Name not found")
@@ -229,13 +265,22 @@ fn parse_cell_array_capture(capture: Captures) -> (String, OctaveTypes) {
     )
     .expect("Could not parse usize from string.");
 
-    (
-        name,
-        OctaveTypes::CellArray(vec![
-            vec![OctaveTypes::String("".to_string()); rows];
-            columns
-        ]),
-    )
+    let mut cell_array = vec![vec![OctaveType::Empty; columns]; rows];
+
+    //     for i in 0..rows {
+    //         for j in 0..columns {
+    //             cell_array[i][j] = match element.name("type").unwrap().as_str() {
+    //                 "sq_string" | "string" => {
+    //                     OctaveType::String(parse_string_capture(element).1.replacen("\n", "", 1))
+    //                 }
+    //                 "scalar" => OctaveType::Scalar(parse_scalar_capture(element).1),
+    //                 "matrix" => OctaveType::Matrix(parse_matrix_capture(element).1),
+    //                 &_ => OctaveType::Empty,
+    //             };
+    //         }
+    //     }
+
+    (name, CellArray(cell_array))
 }
 
 fn parse_matrix_capture(capture: Captures) -> (String, Vec<Vec<f64>>) {

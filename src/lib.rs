@@ -14,7 +14,7 @@ use futures_util::{stream::StreamExt, TryStreamExt};
 
 pub mod cookbook;
 mod results;
-pub use results::{InterpreterResults, OctaveTypes};
+pub use results::{InterpreterResults, OctaveType};
 
 /// Evaluate a few lines of Octave code and extract the results.
 /// ```

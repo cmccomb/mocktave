@@ -15,7 +15,8 @@ categories = ["parser-implementations"]
 [features]
 default=["docker"]
 docker = ["bollard", "futures-util", "tokio"]
-brew = ["minreq", "serde_yaml", "decompress"]
+brew-src = ["minreq", "serde_yaml", "decompress"]
+brew-local = []
 
 [build-dependencies]
 minreq = {version = ">=2.6.0", features = ["json-using-serde", "https"], optional=true}

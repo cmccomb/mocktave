@@ -2,16 +2,14 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-extern crate core;
-
-use bollard::{
-    container::{Config, RemoveContainerOptions},
-    exec::{CreateExecOptions, StartExecResults},
-    image::CreateImageOptions,
-    Docker,
-};
-use futures_util::{stream::StreamExt, TryStreamExt};
-
+// extern crate core;
+// use bollard::{
+//     container::{Config, RemoveContainerOptions},
+//     exec::{CreateExecOptions, StartExecResults},
+//     image::CreateImageOptions,
+//     Docker,
+// };
+// use futures_util::{stream::StreamExt, TryStreamExt};
 pub mod cookbook;
 mod results;
 pub use results::{InterpreterResults, OctaveType};
@@ -44,108 +42,164 @@ pub fn eval(input: &str) -> InterpreterResults {
 /// let res3 = interp.eval("a = 'asdf'");
 /// assert_eq!(res3.get_string_named("a").unwrap(), "asdf");
 /// ```
+#[cfg(all(
+    feature = "docker",
+    not(feature = "brew-local"),
+    not(feature = "brew-src")
+))]
 pub struct Interpreter {
-    docker: Docker,
+    docker: bollard::Docker,
     id: String,
 }
+#[cfg(any(feature = "brew-src", feature = "brew-local"))]
+pub struct Interpreter {}
 
 impl Default for Interpreter {
     fn default() -> Self {
-        tokio::runtime::Runtime::new()
-            .expect("Cannot create tokio runtime")
-            .block_on(async {
-                let docker = Docker::connect_with_socket_defaults()
-                    .expect("Could not connect with socket defaults");
-                docker
-                    .create_image(
-                        Some(CreateImageOptions {
-                            from_image: "gnuoctave/octave",
-                            tag: "8.1.0",
-                            ..Default::default()
-                        }),
-                        None,
-                        None,
-                    )
-                    .try_collect::<Vec<_>>()
-                    .await
-                    .expect("Could not create image.");
+        #[cfg(all(
+            feature = "docker",
+            not(feature = "brew-local"),
+            not(feature = "brew-src")
+        ))]
+        {
+            use futures_util::{stream::StreamExt, TryStreamExt};
+            return tokio::runtime::Runtime::new()
+                .expect("Cannot create tokio runtime")
+                .block_on(async {
+                    let docker = bollard::Docker::connect_with_local_defaults()
+                        .expect("Could not connect with local defaults");
+                    docker
+                        .create_image(
+                            Some(bollard::image::CreateImageOptions {
+                                from_image: "gnuoctave/octave",
+                                tag: "8.1.0",
+                                ..Default::default()
+                            }),
+                            None,
+                            None,
+                        )
+                        .try_collect::<Vec<_>>()
+                        .await
+                        .expect("Could not create image.");
 
-                let alpine_config = Config {
-                    image: Some("gnuoctave/octave:8.1.0"),
-                    tty: Some(true),
-                    ..Default::default()
-                };
+                    let alpine_config = bollard::container::Config {
+                        image: Some("gnuoctave/octave:8.1.0"),
+                        tty: Some(true),
+                        ..Default::default()
+                    };
 
-                let id = docker
-                    .create_container::<&str, &str>(None, alpine_config)
-                    .await
-                    .expect("Could not create container.")
-                    .id;
+                    let id = docker
+                        .create_container::<&str, &str>(None, alpine_config)
+                        .await
+                        .expect("Could not create container.")
+                        .id;
 
-                docker
-                    .start_container::<String>(&id, None)
-                    .await
-                    .expect("Could not start container");
+                    docker
+                        .start_container::<String>(&id, None)
+                        .await
+                        .expect("Could not start container");
 
-                Interpreter { docker, id }
-            })
+                    Interpreter { docker, id }
+                });
+        }
+
+        #[cfg(all(feature = "brew-local", not(feature = "brew-src")))]
+        return Interpreter {};
+
+        #[cfg(feature = "brew-src")]
+        return Interpreter {};
     }
 }
 
 impl Interpreter {
     /// This function does the heavy lifting in the interpreter struct.
     pub fn eval(&self, input: &str) -> InterpreterResults {
-        tokio::runtime::Runtime::new()
-            .expect("Cannot create tokio runtime")
-            .block_on(async {
-                // non interactive
-                let exec = self
-                    .docker
-                    .create_exec(
-                        &self.id.clone(),
-                        CreateExecOptions {
-                            attach_stdout: Some(true),
-                            attach_stderr: Some(true),
-                            cmd: Some(vec![
-                                "octave",
-                                "--eval",
-                                &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
-                            ]),
-                            ..Default::default()
-                        },
-                    )
-                    .await
-                    .expect("Could not create command to execute.")
-                    .id;
+        #[cfg(all(
+            feature = "docker",
+            not(feature = "brew-local"),
+            not(feature = "brew-src")
+        ))]
+        {
+            use futures_util::{stream::StreamExt, TryStreamExt};
+            return tokio::runtime::Runtime::new()
+                .expect("Cannot create tokio runtime")
+                .block_on(async {
+                    // non interactive
+                    let exec = self
+                        .docker
+                        .create_exec(
+                            &self.id.clone(),
+                            bollard::exec::CreateExecOptions {
+                                attach_stdout: Some(true),
+                                attach_stderr: Some(true),
+                                cmd: Some(vec![
+                                    "octave",
+                                    "--eval",
+                                    &(input.to_string() + "\n\nsave(\"-\", \"*\");"),
+                                ]),
+                                ..Default::default()
+                            },
+                        )
+                        .await
+                        .expect("Could not create command to execute.")
+                        .id;
 
-                let mut output_text = vec!["".to_string(); 0];
+                    let mut output_text = vec!["".to_string(); 0];
 
-                if let StartExecResults::Attached { mut output, .. } = self
-                    .docker
-                    .start_exec(&exec, None)
-                    .await
-                    .expect("Execution of command failed.")
-                {
-                    while let Some(Ok(msg)) = output.next().await {
-                        output_text.push(msg.to_string());
-                        print!("{}", msg);
+                    if let bollard::exec::StartExecResults::Attached { mut output, .. } = self
+                        .docker
+                        .start_exec(&exec, None)
+                        .await
+                        .expect("Execution of command failed.")
+                    {
+                        while let Some(Ok(msg)) = output.next().await {
+                            output_text.push(msg.to_string());
+                            print!("{}", msg);
+                        }
+                    } else {
+                        unreachable!();
                     }
-                } else {
-                    unreachable!();
-                }
 
-                InterpreterResults::from(output_text.join(""))
-            })
+                    return InterpreterResults::from(output_text.join(""));
+                });
+        }
+
+        #[cfg(all(feature = "brew-local", not(feature = "brew-src")))]
+        {
+            let output = std::process::Command::new("octave")
+                .arg("--eval")
+                .arg(&(input.to_string() + "\n\nsave(\"-\", \"*\");"))
+                .output()
+                .expect("");
+
+            return InterpreterResults::from(String::from_utf8(output.stdout).unwrap());
+        }
+
+        #[cfg(feature = "brew-src")]
+        {
+            let output = std::process::Command::new("octave")
+                .arg("--eval")
+                .arg(&(input.to_string() + "\n\nsave(\"-\", \"*\");"))
+                .output()
+                .expect("");
+
+            return InterpreterResults::from(String::from_utf8(output.stdout).unwrap());
+        }
     }
 }
 
+#[cfg(all(
+    feature = "docker",
+    not(feature = "brew-local"),
+    not(feature = "brew-src")
+))]
 impl Drop for Interpreter {
     fn drop(&mut self) {
         tokio::runtime::Runtime::new()
             .expect("Cannot create tokio runtime to to remove container")
             .block_on(self.docker.remove_container(
                 &self.id.clone(),
-                Some(RemoveContainerOptions {
+                Some(bollard::container::RemoveContainerOptions {
                     force: true,
                     ..Default::default()
                 }),

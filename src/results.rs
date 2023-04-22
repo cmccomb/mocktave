@@ -23,7 +23,10 @@ pub struct InterpreterResults {
     cell_arrays: HashMap<String, OctaveType>,
 }
 
-#[derive(Debug, Clone)]
+/// ```
+/// use mocktave::OctaveType;
+/// ```
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
 pub enum OctaveType {
     Scalar(f64),
     Matrix(Vec<Vec<f64>>),

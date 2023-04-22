@@ -31,6 +31,41 @@ pub fn eval(input: &str) -> InterpreterResults {
     Interpreter::default().eval(input)
 }
 
+/// THis function providest he ability to wrap Octave functions for convenient later use.
+/// ```
+/// let primes = mocktave::wrap("primes".into());
+/// let all_primes_less_than_100 = primes(&[100]);
+/// println!("{all_primes_less_than_100:?}");
+/// assert_eq!(all_primes_less_than_100, mocktave::OctaveType::Matrix(vec![vec![2.0, 3.0, 5.0, 7.0,
+///     11.0, 13.0, 17.0, 19.0, 23.0, 29.0, 31.0, 37.0, 41.0, 43.0, 47.0, 53.0, 59.0, 61.0, 67.0,
+///     71.0, 73.0, 79.0, 83.0, 89.0, 97.0]]))
+/// ```
+/// ```
+/// let max = mocktave::wrap("max".into());
+/// let should_be_101 = max(&[100, 101]);
+/// assert_eq!(should_be_101, mocktave::OctaveType::Scalar(101.0));
+/// ```
+pub fn wrap<Y>(function: String) -> Box<dyn Fn(Y) -> OctaveType>
+where
+    Y: IntoIterator,
+    <Y as IntoIterator>::Item: ToString,
+{
+    Box::new(move |inputs| {
+        let mut args = vec![String::new(); 0];
+        for input in inputs.into_iter() {
+            args.push(input.to_string());
+        }
+        eval(
+            &("result_of_function = ".to_owned()
+                + function.as_str()
+                + "("
+                + &args.join(", ")
+                + ")"),
+        )
+        .get_unchecked("result_of_function")
+    })
+}
+
 /// Create a persistent interpreter that can call a single container multiple times, resulting in
 /// more efficiency code execution.
 /// ```

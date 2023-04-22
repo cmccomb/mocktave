@@ -162,6 +162,21 @@ mod build {
             )
             .output()
             .expect("oops");
+        std::process::Command::new("cp")
+            .arg(
+                std::env::var("OUT_DIR").unwrap()
+                    + "/brew-"
+                    + super::BREW_VERSION
+                    + "/Cellar/gcc/12.2.0/bin/gfortran",
+            )
+            .arg(
+                std::env::var("OUT_DIR").unwrap()
+                    + "/brew-"
+                    + super::BREW_VERSION
+                    + "/Library/Homebrew/shims/mac/super",
+            )
+            .output()
+            .expect("oops");
 
         super::brew_install(
             BREW_COMMAND,

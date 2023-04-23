@@ -1,15 +1,16 @@
-use std::fmt::Error;
+use std::fmt::{Display, Error, Formatter};
 use std::num::ParseFloatError;
 use std::{collections::HashMap, str::FromStr};
 
 use regex::{Captures, Match};
 
-use crate::OctaveType::CellArray;
 use human_regex::{
     any, beginning, digit, end, exactly, multi_line_mode, named_capture, one_or_more, or,
     printable, text, whitespace, word, zero_or_more, zero_or_one,
 };
 
+/// Possible types that can be returned from Octave through this library. These can also be used to
+/// create convenient inputs to a function created using `wrap`
 /// ```
 /// use mocktave::OctaveType;
 /// ```
@@ -29,7 +30,37 @@ impl Default for OctaveType {
     }
 }
 
+impl Display for OctaveType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match &self {
+                OctaveType::Scalar(scalar) => {
+                    format!("{scalar}")
+                }
+                OctaveType::Matrix(vec) => {
+                    format!("{vec:?}")
+                }
+                OctaveType::String(string) => {
+                    format!("{string}")
+                }
+                OctaveType::CellArray(ot) => {
+                    format!("{ot:?}")
+                }
+                OctaveType::Empty => {
+                    format!("")
+                }
+                OctaveType::Error(message) => {
+                    format!("Error: {message}")
+                }
+            }
+        )
+    }
+}
+
 impl OctaveType {
+    /// Unwrap a scalar octave type into f64
     /// ```
     /// let x: f64 = mocktave::OctaveType::Scalar(0.0).try_into_f64().unwrap();
     /// ```
@@ -40,6 +71,7 @@ impl OctaveType {
             Err(())
         }
     }
+    /// Unwrap a string octave type into String
     /// ```
     /// let x: String = mocktave::OctaveType::String("0.0".to_string()).try_into_string().unwrap();
     /// ```
@@ -50,6 +82,7 @@ impl OctaveType {
             Err(())
         }
     }
+    /// Unwrap a matrix octave type into vec<vec<f64>>
     /// ```
     /// let x: Vec<Vec<f64>> = mocktave::OctaveType::Matrix(vec![vec![0.0_f64;2];2]).try_into_vec_f64().unwrap();
     /// ```
@@ -60,6 +93,7 @@ impl OctaveType {
             Err(())
         }
     }
+    /// Unwrap a cell array octave type into vec<vec<octavetype>>
     /// ```
     /// let x: Vec<Vec<mocktave::OctaveType>> = mocktave::OctaveType::CellArray(vec![vec![mocktave::OctaveType::Scalar(1.0)]]).try_into_vec_octave_type().unwrap();
     /// ```
@@ -329,7 +363,7 @@ fn parse_cell_array_capture(
     //         }
     //     }
 
-    (name, CellArray(cell_array))
+    (name, OctaveType::CellArray(cell_array))
 }
 
 fn parse_matrix_capture(capture: Captures) -> (String, Vec<Vec<f64>>) {

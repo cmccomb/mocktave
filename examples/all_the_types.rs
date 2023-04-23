@@ -11,13 +11,13 @@ fn main() {
 
     let results = mocktave::eval(&script);
 
-    let a: f64 = results.get_scalar_named("a").unwrap();
-    let b: Vec<Vec<f64>> = results.get_matrix_named("b").unwrap();
-    let c: String = results.get_string_named("c").unwrap();
-    let d: String = results.get_string_named("d").unwrap();
-    let e: Vec<Vec<f64>> = results.get_matrix_named("e").unwrap();
-    let f: Vec<Vec<f64>> = results.get_matrix_named("f").unwrap();
-    let g: mocktave::OctaveType = results.get_cell_array_named("g").unwrap();
+    let _a: f64 = results.get_scalar_named("a").unwrap();
+    let _b: Vec<Vec<f64>> = results.get_matrix_named("b").unwrap();
+    let _c: String = results.get_string_named("c").unwrap();
+    let _d: String = results.get_string_named("d").unwrap();
+    let _e: Vec<Vec<f64>> = results.get_matrix_named("e").unwrap();
+    let _f: Vec<Vec<f64>> = results.get_matrix_named("f").unwrap();
+    let _g: mocktave::OctaveType = results.get_cell_array_named("g").unwrap();
 
     println!("{results:#?}");
 }

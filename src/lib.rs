@@ -34,7 +34,7 @@ pub fn eval(input: &str) -> InterpreterResults {
 /// THis function provides the ability to wrap Octave functions for convenient later use.
 /// ```
 /// let primes = mocktave::wrap("primes".into());
-/// let all_primes_less_than_100 = primes(&[100]);
+/// let all_primes_less_than_100 = primes([100]);
 /// assert_eq!(all_primes_less_than_100.try_into_vec_f64().unwrap(), vec![vec![2.0, 3.0, 5.0, 7.0,
 ///     11.0, 13.0, 17.0, 19.0, 23.0, 29.0, 31.0, 37.0, 41.0, 43.0, 47.0, 53.0, 59.0, 61.0, 67.0,
 ///     71.0, 73.0, 79.0, 83.0, 89.0, 97.0]])
@@ -42,14 +42,19 @@ pub fn eval(input: &str) -> InterpreterResults {
 /// Use functions with multiple inputs
 /// ```
 /// let max = mocktave::wrap("max".into());
-/// let should_be_101 = max(&[100, 101]);
+/// let should_be_101 = max([100, 101]);
 /// assert_eq!(should_be_101.try_into_f64().unwrap(), 101.0_f64);
 /// ```
 /// And even use functions with disimilar types
 /// ```
-/// let max = mocktave::wrap("max".into());
-/// let should_be_101 = max(&[100, 101]);
-/// assert_eq!(should_be_101.try_into_f64().unwrap(), 101.0_f64);
+/// use mocktave::OctaveType;
+/// let norm = mocktave::wrap("norm".into());
+/// let x = [
+///     OctaveType::Matrix(vec![vec![0.0; 2]; 2]),
+///     OctaveType::Scalar(2.0)
+/// ];
+/// let should_be_zero= norm(x);
+/// assert_eq!(should_be_zero.try_into_f64().unwrap(), 0.0_f64);
 /// ```
 pub fn wrap<Y>(function: String) -> Box<dyn Fn(Y) -> OctaveType>
 where

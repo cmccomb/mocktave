@@ -1,3 +1,5 @@
+use std::fmt::Error;
+use std::num::ParseFloatError;
 use std::{collections::HashMap, str::FromStr};
 
 use regex::{Captures, Match};
@@ -7,6 +9,68 @@ use human_regex::{
     any, beginning, digit, end, exactly, multi_line_mode, named_capture, one_or_more, or,
     printable, text, whitespace, word, zero_or_more, zero_or_one,
 };
+
+/// ```
+/// use mocktave::OctaveType;
+/// ```
+#[derive(Debug, Clone, PartialEq, PartialOrd)]
+pub enum OctaveType {
+    Scalar(f64),
+    Matrix(Vec<Vec<f64>>),
+    String(String),
+    CellArray(Vec<Vec<OctaveType>>),
+    Empty,
+    Error(String),
+}
+
+impl Default for OctaveType {
+    fn default() -> Self {
+        OctaveType::Empty
+    }
+}
+
+impl OctaveType {
+    /// ```
+    /// let x: f64 = mocktave::OctaveType::Scalar(0.0).try_into_f64().unwrap();
+    /// ```
+    pub fn try_into_f64(self) -> Result<f64, ()> {
+        if let OctaveType::Scalar(value) = self {
+            return Ok(value.into());
+        } else {
+            Err(())
+        }
+    }
+    /// ```
+    /// let x: String = mocktave::OctaveType::String("0.0".to_string()).try_into_string().unwrap();
+    /// ```
+    pub fn try_into_string(self) -> Result<String, ()> {
+        if let OctaveType::String(value) = self {
+            return Ok(value);
+        } else {
+            Err(())
+        }
+    }
+    /// ```
+    /// let x: Vec<Vec<f64>> = mocktave::OctaveType::Matrix(vec![vec![0.0_f64;2];2]).try_into_vec_f64().unwrap();
+    /// ```
+    pub fn try_into_vec_f64(self) -> Result<Vec<Vec<f64>>, ()> {
+        if let OctaveType::Matrix(value) = self {
+            return Ok(value);
+        } else {
+            Err(())
+        }
+    }
+    /// ```
+    /// let x: Vec<Vec<mocktave::OctaveType>> = mocktave::OctaveType::CellArray(vec![vec![mocktave::OctaveType::Scalar(1.0)]]).try_into_vec_octave_type().unwrap();
+    /// ```
+    pub fn try_into_vec_octave_type(self) -> Result<Vec<Vec<OctaveType>>, ()> {
+        if let OctaveType::CellArray(value) = self {
+            return Ok(value);
+        } else {
+            Err(())
+        }
+    }
+}
 
 /// Contains the workspace that resulted from running the octave command in `eval`
 #[derive(Debug, Clone)]
@@ -21,24 +85,6 @@ pub struct InterpreterResults {
     strings: HashMap<String, String>,
     /// String variables
     cell_arrays: HashMap<String, OctaveType>,
-}
-
-/// ```
-/// use mocktave::OctaveType;
-/// ```
-#[derive(Debug, Clone, PartialEq, PartialOrd)]
-pub enum OctaveType {
-    Scalar(f64),
-    Matrix(Vec<Vec<f64>>),
-    String(String),
-    CellArray(Vec<Vec<OctaveType>>),
-    Empty,
-}
-
-impl Default for OctaveType {
-    fn default() -> Self {
-        OctaveType::Empty
-    }
 }
 
 impl InterpreterResults {

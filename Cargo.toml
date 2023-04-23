@@ -10,7 +10,7 @@ homepage = "https://github.com/cmccomb/mocktave"
 documentation = "https://docs.rs/mocktave"
 license = "MIT OR Apache-2.0"
 keywords = ["matlab", "octave", "interpeter"]
-categories = ["parser-implementations"]
+categories = ["parser-implementations", "development-tools::testing"]
 
 [features]
 default=["docker"]

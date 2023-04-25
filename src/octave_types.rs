@@ -116,15 +116,15 @@ impl OctaveType {
             Err(OctaveTryIntoError("This is not an instance of OctaveType::CellArray and therefore cannot be converted into Vec<Vec<OctaveType>>.".to_string()))
         }
     }
-    /// Unwrap a cell array octave type into ()
+    /// Unwrap an Empty octave type into `()`
     /// ```
-    /// let x: () = mocktave::OctaveType::default().try_into_emtpy().unwrap();
+    /// let x: () = mocktave::OctaveType::default().try_into_empty().unwrap();
     /// ```
     pub fn try_into_empty(self) -> Result<(), OctaveTryIntoError> {
-        if let OctaveType::CellArray(value) = self {
+        if let OctaveType::Empty = self {
             return Ok(());
         } else {
-            Err(OctaveTryIntoError("This is not an instance of OctaveType::Empty and therefore cannot be converted into Vec<Vec<OctaveType>>.".to_string()))
+            Err(OctaveTryIntoError("This is not an instance of OctaveType::Empty and therefore cannot be converted into ().".to_string()))
         }
     }
 }

@@ -114,6 +114,7 @@ impl From<String> for InterpreterResults {
             results.strings.insert(name, value);
         }
 
+        // Make a matrix match and parse the output
         let matrix_match = multi_line_mode(
             beginning()
                 + text("# name: ")
@@ -152,6 +153,7 @@ impl From<String> for InterpreterResults {
         //
         //
 
+        // Make a cell-array match and parse the output
         let cell_array_match = multi_line_mode(
             beginning()
                 + text("# name: ")
@@ -168,31 +170,26 @@ impl From<String> for InterpreterResults {
                 + named_capture(text("# name: <cell-element>\n"), "name")
                 + text("# type: ")
                 + named_capture(one_or_more(word()), "type")
-                + text("\n# rows: ")
-                + zero_or_more(named_capture(one_or_more(digit()), "rows"))
-                + text("\n# columns: ")
-                + zero_or_more(named_capture(one_or_more(digit()), "columns"))
-                + text("\n# elements: ")
-                + zero_or_more(named_capture(one_or_more(digit()), "elements"))
-                + text("\n# length: ")
-                + zero_or_more(named_capture(one_or_more(digit()), "length"))
+                + zero_or_more(text("\n# rows: ") + named_capture(one_or_more(digit()), "rows"))
+                + zero_or_more(
+                    text("\n# columns: ") + named_capture(one_or_more(digit()), "columns"),
+                )
+                + zero_or_more(
+                    text("\n# elements: ") + named_capture(one_or_more(digit()), "elements"),
+                )
+                + zero_or_more(
+                    text("\n# length: ") + named_capture(one_or_more(digit()), "length"),
+                )
                 + zero_or_one(named_capture(
                     one_or_more(whitespace() + beginning() + one_or_more(any())),
                     "data",
                 )),
         );
 
-        for capture in cell_array_match.to_regex().captures_iter(&output) {
-            let (name, value) = parse_cell_array_capture(
-                capture,
-                cell_element_match
-                    .to_regex()
-                    .captures_iter(&output)
-                    .map(|x| x)
-                    .collect::<Vec<Captures>>(),
-            );
-            results.cell_arrays.insert(name, value);
-        }
+        results.cell_arrays = parse_cell_array_capture(
+            cell_array_match.to_regex().captures_iter(&output),
+            cell_element_match.to_regex().captures_iter(&output),
+        );
 
         results
     }
@@ -233,43 +230,57 @@ fn parse_string_capture(capture: Captures) -> (String, String) {
 }
 
 fn parse_cell_array_capture(
-    capture: Captures,
-    mut elements: Vec<Captures>,
-) -> (String, OctaveType) {
-    println!("{elements:?}");
+    array_captures: regex::CaptureMatches,
+    mut element_captures: regex::CaptureMatches,
+) -> HashMap<String, OctaveType> {
+    let mut output: HashMap<String, OctaveType> = HashMap::new();
 
-    let name = capture
-        .name("name")
-        .expect("Name not found")
-        .as_str()
-        .to_string();
-
-    let rows = usize::from_str(capture.name("rows").expect("No key named rows.").as_str())
-        .expect("Could not parse usize from string.");
-    let columns = usize::from_str(
-        capture
+    for cell_array in array_captures {
+        let name = cell_array
+            .name("name")
+            .expect("Name not found")
+            .as_str()
+            .to_string();
+        let rows = cell_array
+            .name("rows")
+            .expect("Name not found")
+            .as_str()
+            .to_string()
+            .parse()
+            .unwrap();
+        let columns = cell_array
             .name("columns")
-            .expect("No key named columns.")
-            .as_str(),
-    )
-    .expect("Could not parse usize from string.");
+            .expect("Name not found")
+            .as_str()
+            .to_string()
+            .parse()
+            .unwrap();
 
-    let mut cell_array = vec![vec![OctaveType::Empty; columns]; rows];
+        let mut value = vec![vec![OctaveType::Empty; columns]; rows];
 
-    //     for i in 0..rows {
-    //         for j in 0..columns {
-    //             cell_array[i][j] = match element.name("type").unwrap().as_str() {
-    //                 "sq_string" | "string" => {
-    //                     OctaveType::String(parse_string_capture(element).1.replacen("\n", "", 1))
-    //                 }
-    //                 "scalar" => OctaveType::Scalar(parse_scalar_capture(element).1),
-    //                 "matrix" => OctaveType::Matrix(parse_matrix_capture(element).1),
-    //                 &_ => OctaveType::Empty,
-    //             };
-    //         }
-    //     }
+        for idx in 0..rows {
+            for jdx in 0..columns {
+                let cell_element = element_captures.next().unwrap();
+                let cell_element_name = cell_element
+                    .name("type")
+                    .expect("Name not found")
+                    .as_str()
+                    .to_string();
+                value[idx][jdx] = match cell_element_name.as_str() {
+                    "scalar" => OctaveType::Scalar(parse_scalar_capture(cell_element).1),
+                    "matrix" => OctaveType::Matrix(parse_matrix_capture(cell_element).1),
+                    "sq_string" | "string" => OctaveType::String(
+                        parse_string_capture(cell_element).1.replacen("\n", "", 1),
+                    ),
+                    _ => OctaveType::Empty,
+                }
+            }
+        }
 
-    (name, OctaveType::CellArray(cell_array))
+        output.insert(name, OctaveType::CellArray(value));
+    }
+
+    output
 }
 
 fn parse_matrix_capture(capture: Captures) -> (String, Vec<Vec<f64>>) {

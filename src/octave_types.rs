@@ -41,7 +41,15 @@ impl Display for OctaveType {
                     format!("{string}")
                 }
                 OctaveType::CellArray(ot) => {
-                    format!("{ot:?}")
+                    let mut big_ol_string = "".to_string();
+                    for row in ot {
+                        for element in row {
+                            big_ol_string += &format!("{element},");
+                        }
+                        big_ol_string += ";";
+                    }
+                    big_ol_string += "}";
+                    format!("{big_ol_string}")
                 }
                 OctaveType::Empty => {
                     format!("")

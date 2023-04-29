@@ -35,5 +35,5 @@ fn main() {
     let _f3: &mocktave::OctaveType = &results["f"];
     let _g3: &mocktave::OctaveType = &results["g"];
 
-    println!("{results:#?}");
+    println!("{results}");
 }

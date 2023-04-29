@@ -11,7 +11,7 @@ pub enum OctaveType {
     Matrix(Vec<Vec<f64>>),
     /// A string value, accounting for both single and double quote strings. The underlying type is `String`.
     String(String),
-    ///
+    /// A cell array, which is essentially a matrix of non-numeric types
     CellArray(Vec<Vec<OctaveType>>),
     /// Something a value might be empty. This is mostly for default.
     Empty,
@@ -41,15 +41,7 @@ impl Display for OctaveType {
                     format!("{string}")
                 }
                 OctaveType::CellArray(ot) => {
-                    let mut big_ol_string = "".to_string();
-                    for row in ot {
-                        for element in row {
-                            big_ol_string += &format!("{element},");
-                        }
-                        big_ol_string += ";";
-                    }
-                    big_ol_string += "}";
-                    format!("{big_ol_string}")
+                    format!("{ot:?}")
                 }
                 OctaveType::Empty => {
                     format!("")

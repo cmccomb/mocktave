@@ -15,7 +15,7 @@ use human_regex::{
 };
 
 /// Contains the workspace that resulted from running the octave command in `eval`
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct InterpreterResults {
     /// Raw output
     pub raw: String,
@@ -75,6 +75,29 @@ impl Default for InterpreterResults {
         }
     }
 }
+
+impl Display for InterpreterResults {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut keys = &mut self
+            .variables
+            .keys()
+            .cloned()
+            .collect::<Vec<String>>()
+            .clone();
+        keys.sort();
+        for key in keys {
+            write!(f, "\n\n{:#?}", &self.variables.get(key).unwrap());
+        }
+        Ok(())
+    }
+}
+
+impl Debug for InterpreterResults {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", &self.raw)
+    }
+}
+
 impl From<String> for InterpreterResults {
     fn from(output: String) -> Self {
         // Instantiate results and save raw output

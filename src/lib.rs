@@ -33,7 +33,7 @@ pub fn eval(input: &str) -> InterpreterResults {
     Interpreter::default().eval(input)
 }
 
-/// THis function provides the ability to wrap Octave functions for convenient later use.
+/// This function provides the ability to wrap Octave functions for convenient later use.
 /// ```
 /// let primes = mocktave::wrap("primes".into());
 /// let all_primes_less_than_100 = primes([100]);

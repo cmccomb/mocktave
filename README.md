@@ -24,7 +24,7 @@ fn primes(less_than_n: usize) -> Vec<Vec<f64>> {
                 less_than_n        // Pass through the argument
             )
         )
-        .get_matrix_named("x")     // Extract the results matrix. 
+        .get_matrix("x")           // Extract the results matrix. 
         .unwrap()                  // Unwrap to get the value     
 }
 

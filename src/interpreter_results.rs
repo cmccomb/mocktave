@@ -51,8 +51,11 @@ impl InterpreterResults {
     }
     /// Get a variable by name and convert it ot a Vec<Vec<OctaveType>>, if the variable exists and
     /// is convertible.
-    pub fn get_cell_array(&self, name: &str) -> Option<OctaveType> {
-        self.variables.get(name).cloned()
+    pub fn get_cell_array(&self, name: &str) -> Option<Vec<Vec<OctaveType>>> {
+        self.variables
+            .get(name)
+            .cloned()
+            .and_then(|ot| ot.try_into_vec_octave_type().ok())
     }
     /// Get a variable without checking whether or not it exists first. Panics if variable doesn't
     /// exist.
@@ -63,7 +66,6 @@ impl InterpreterResults {
             .expect(&format!("The variable `{name}` does not exist"))
     }
 }
-
 impl Default for InterpreterResults {
     fn default() -> Self {
         InterpreterResults {

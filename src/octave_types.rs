@@ -83,7 +83,7 @@ impl OctaveType {
             return Ok(value);
         } else {
             Err(OctaveTryIntoError(
-                "This is not an OctaveType::Scalar and therefore cannot be converted into f64."
+                "This is not an `OctaveType::Scalar` and therefore cannot be converted into f64."
                     .to_string(),
             ))
         }
@@ -97,7 +97,7 @@ impl OctaveType {
             return Ok(value);
         } else {
             Err(OctaveTryIntoError(
-                "This is not an instance of OctaveType::String and therefore cannot be converted into String."
+                "This is not an instance of `OctaveType::String` and therefore cannot be converted into String."
                     .to_string(),
             ))
         }
@@ -110,7 +110,7 @@ impl OctaveType {
         if let OctaveType::Matrix(value) = self {
             return Ok(value);
         } else {
-            Err(OctaveTryIntoError("This is not an instance of OctaveType::Matrix and therefore cannot be converted into Vec<Vec<f64>>.".to_string()))
+            Err(OctaveTryIntoError("This is not an instance of `OctaveType::Matrix` and therefore cannot be converted into Vec<Vec<f64>>.".to_string()))
         }
     }
     /// Unwrap a cell array octave type into `Vec<Vec<OctaveType>>`
@@ -121,7 +121,7 @@ impl OctaveType {
         if let OctaveType::CellArray(value) = self {
             return Ok(value);
         } else {
-            Err(OctaveTryIntoError("This is not an instance of OctaveType::CellArray and therefore cannot be converted into Vec<Vec<OctaveType>>.".to_string()))
+            Err(OctaveTryIntoError("This is not an instance of `OctaveType::CellArray` and therefore cannot be converted into Vec<Vec<OctaveType>>.".to_string()))
         }
     }
     /// Unwrap an Empty octave type into `()`
@@ -134,5 +134,59 @@ impl OctaveType {
         } else {
             Err(OctaveTryIntoError("This is not an instance of OctaveType::Empty and therefore cannot be converted into ().".to_string()))
         }
+    }
+}
+
+// Implement into empty
+impl From<OctaveType> for () {
+    fn from(_value: OctaveType) -> Self {
+        ()
+    }
+}
+
+// Implement into f64
+impl From<OctaveType> for f64 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap()
+    }
+}
+
+// Implement into f32
+impl From<OctaveType> for f32 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as f32
+    }
+}
+
+// Implement into String
+impl From<OctaveType> for String {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_string().unwrap()
+    }
+}
+
+// Implement into Vec<Vec<f64>
+impl From<OctaveType> for Vec<Vec<f64>> {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_vec_f64().unwrap()
+    }
+}
+
+// Implement into Vec<Vec<f32>
+impl From<OctaveType> for Vec<Vec<f32>> {
+    fn from(value: OctaveType) -> Self {
+        value
+            .try_into_vec_f64()
+            .unwrap()
+            .into_iter()
+            .map(|row| row.into_iter().map(|el| el as f32).collect::<Vec<f32>>())
+            .collect::<Vec<Vec<f32>>>()
+    }
+}
+
+// Implement into Vec<Vec<OctaveType>
+impl From<OctaveType> for Vec<Vec<OctaveType>> {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_vec_octave_type().unwrap()
     }
 }

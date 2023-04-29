@@ -19,15 +19,15 @@ pub use octave_types::OctaveType;
 /// Evaluate a few lines of Octave code and extract the results.
 /// ```
 /// let res = mocktave::eval("a = 5+2");
-/// assert_eq!(res.get_scalar_named("a").unwrap(), 7_f64);
+/// assert_eq!(res.get_scalar("a").unwrap(), 7_f64);
 /// ```
 /// ```
 /// let res = mocktave::eval("a = ones(2, 2)");
-/// assert_eq!(res.get_matrix_named("a").unwrap(), vec![vec![1.0_f64; 2]; 2]);
+/// assert_eq!(res.get_matrix("a").unwrap(), vec![vec![1.0_f64; 2]; 2]);
 /// ```
 /// ```
 /// let res = mocktave::eval("a = 'asdf'");
-/// assert_eq!(res.get_string_named("a").unwrap(), "asdf");
+/// assert_eq!(res.get_string("a").unwrap(), "asdf");
 /// ```
 pub fn eval(input: &str) -> InterpreterResults {
     Interpreter::default().eval(input)
@@ -55,8 +55,8 @@ pub fn eval(input: &str) -> InterpreterResults {
 ///     OctaveType::Matrix(vec![vec![0.0; 2]; 2]),
 ///     OctaveType::Scalar(2.0)
 /// ];
-/// let should_be_zero= norm(x);
-/// assert_eq!(should_be_zero.try_into_f64().unwrap(), 0.0_f64);
+/// let should_be_zero: f64 = norm(x).into();
+/// assert_eq!(should_be_zero, 0.0_f64);
 /// ```
 pub fn wrap<Y>(function: String) -> Box<dyn Fn(Y) -> OctaveType>
 where
@@ -84,11 +84,11 @@ where
 /// ```
 /// let mut interp = mocktave::Interpreter::default();
 /// let res1 = interp.eval("a = 5+2");
-/// assert_eq!(res1.get_scalar_named("a").unwrap(), 7_f64);
+/// assert_eq!(res1.get_scalar("a").unwrap(), 7_f64);
 /// let res2 = interp.eval("a = ones(2, 2)");
-/// assert_eq!(res2.get_matrix_named("a").unwrap(), vec![vec![1.0_f64; 2]; 2]);
+/// assert_eq!(res2.get_matrix("a").unwrap(), vec![vec![1.0_f64; 2]; 2]);
 /// let res3 = interp.eval("a = 'asdf'");
-/// assert_eq!(res3.get_string_named("a").unwrap(), "asdf");
+/// assert_eq!(res3.get_string("a").unwrap(), "asdf");
 /// ```
 #[cfg(all(
     feature = "docker",

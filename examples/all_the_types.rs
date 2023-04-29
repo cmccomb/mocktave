@@ -25,7 +25,15 @@ fn main() {
     let _d2: String = results.get_unchecked("d").into();
     let _e2: Vec<Vec<f32>> = results.get_unchecked("e").into();
     let _f2: Vec<Vec<f32>> = results.get_unchecked("f").into();
-    let _g: Vec<Vec<mocktave::OctaveType>> = results.get_unchecked("g").into();
+    let _g2: Vec<Vec<mocktave::OctaveType>> = results.get_unchecked("g").into();
+
+    let _a3: &mocktave::OctaveType = &results["a"];
+    let _c3: &mocktave::OctaveType = &results["b"];
+    let _d3: &mocktave::OctaveType = &results["c"];
+    let _e3: &mocktave::OctaveType = &results["d"];
+    let _e3: &mocktave::OctaveType = &results["e"];
+    let _f3: &mocktave::OctaveType = &results["f"];
+    let _g3: &mocktave::OctaveType = &results["g"];
 
     println!("{results:#?}");
 }

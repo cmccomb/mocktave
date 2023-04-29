@@ -1,6 +1,7 @@
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 use std::num::ParseFloatError;
+use std::ops::{Index, IndexMut};
 use std::{collections::HashMap, str::FromStr};
 
 use regex::{Captures, Match};
@@ -173,6 +174,20 @@ impl From<String> for InterpreterResults {
         ));
 
         results
+    }
+}
+
+impl Index<&str> for InterpreterResults {
+    type Output = OctaveType;
+
+    fn index(&self, index: &str) -> &Self::Output {
+        &self.variables.get(index).unwrap()
+    }
+}
+
+impl IndexMut<&str> for InterpreterResults {
+    fn index_mut(&mut self, index: &str) -> &mut Self::Output {
+        self.variables.get_mut(index).unwrap()
     }
 }
 

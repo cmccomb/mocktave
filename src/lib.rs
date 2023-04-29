@@ -2,14 +2,6 @@
 #![warn(missing_docs)]
 #![doc = include_str!("../README.md")]
 
-// extern crate core;
-// use bollard::{
-//     container::{Config, RemoveContainerOptions},
-//     exec::{CreateExecOptions, StartExecResults},
-//     image::CreateImageOptions,
-//     Docker,
-// };
-// use futures_util::{stream::StreamExt, TryStreamExt};
 pub mod cookbook;
 mod interpreter_results;
 pub use interpreter_results::InterpreterResults;

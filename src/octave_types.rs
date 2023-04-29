@@ -7,11 +7,17 @@ use std::fmt::{Debug, Display, Formatter};
 pub enum OctaveType {
     /// A scalar value, accounting for both integers and floats. The underlying type is `f64`.
     Scalar(f64),
-    /// A numerical matrix, accounting 2 dimensional matrices of scalars. The underlying type is `Vec<Vec<f64>>`.
+    /// A complex scalar value, accounting for both integers and floats. The underlying type is a
+    /// pair of `f64`s.
+    ComplexScalar(f64, f64),
+    /// A numerical matrix, accounting 2 dimensional matrices of scalars. The underlying type is
+    /// `Vec<Vec<f64>>`.
     Matrix(Vec<Vec<f64>>),
-    /// A string value, accounting for both single and double quote strings. The underlying type is `String`.
+    /// A string value, accounting for both single and double quote strings. The underlying type is
+    /// `String`.
     String(String),
-    /// A cell array, which is essentially a matrix of non-numeric types
+    /// A cell array, which is essentially a matrix of non-numeric types.  The underlying type is
+    /// `Vec<Vec<OctaveType>>`.
     CellArray(Vec<Vec<OctaveType>>),
     /// Something a value might be empty. This is mostly for default.
     Empty,
@@ -33,6 +39,9 @@ impl Display for OctaveType {
             match &self {
                 OctaveType::Scalar(scalar) => {
                     format!("{scalar}")
+                }
+                OctaveType::ComplexScalar(im, re) => {
+                    format!("{im}{re:+}j")
                 }
                 OctaveType::Matrix(vec) => {
                     format!("{vec:?}")

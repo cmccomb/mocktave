@@ -86,7 +86,7 @@ impl Display for InterpreterResults {
             .clone();
         keys.sort();
         for key in keys {
-            write!(f, "\n\n{:#?}", &self.variables.get(key).unwrap());
+            write!(f, "\n\n{key} = \n{:#?}", &self.variables.get(key).unwrap());
         }
         Ok(())
     }
@@ -118,6 +118,22 @@ impl From<String> for InterpreterResults {
         for capture in scalar_match.to_regex().captures_iter(&output) {
             let (name, value) = parse_scalar_capture(capture);
             results.variables.insert(name, OctaveType::Scalar(value));
+        }
+
+        // Make a complex scalar match and parse the output
+        let complex_scalar_match = multi_line_mode(
+            beginning()
+                + text("# name: ")
+                + named_capture(one_or_more(word()), "name")
+                + text("\n# type: complex scalar\n")
+                + named_capture(exactly(1, beginning() + one_or_more(any()) + end()), "data"),
+        );
+
+        for capture in complex_scalar_match.to_regex().captures_iter(&output) {
+            let (name, im, re) = parse_complex_scalar_capture(capture);
+            results
+                .variables
+                .insert(name, OctaveType::ComplexScalar(im, re));
         }
 
         // Make a string capture and parse the output
@@ -229,6 +245,27 @@ fn parse_scalar_capture(capture: Captures) -> (String, f64) {
                 .replace('\n', ""),
         )
         .expect("Could not parse f64 from string."),
+    )
+}
+
+fn parse_complex_scalar_capture(capture: Captures) -> (String, f64, f64) {
+    let string_we_want = &capture
+        .name("data")
+        .expect("No value for scalar data.")
+        .as_str()
+        .replace('\n', "")
+        .replace("(", "")
+        .replace(")", "");
+    let imre = string_we_want.split(",").into_iter().collect::<Vec<&str>>();
+
+    (
+        capture
+            .name("name")
+            .expect("Name not found")
+            .as_str()
+            .to_string(),
+        f64::from_str(imre[0]).expect("Could not parse f64 from string."),
+        f64::from_str(imre[1]).expect("Could not parse f64 from string."),
     )
 }
 

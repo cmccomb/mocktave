@@ -7,6 +7,7 @@ fn main() {
         e = eye(5);
         f = [1, 2, 3, 4];
         g = {'a', 1, [1; 1]};
+        h = 1+1i;
     ";
 
     let results = mocktave::eval(&script);

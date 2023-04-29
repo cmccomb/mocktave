@@ -7,6 +7,7 @@ use regex::{Captures, Match};
 
 use crate::OctaveType;
 
+use crate::octave_types::OctaveTryIntoError;
 use human_regex::{
     any, beginning, digit, end, exactly, multi_line_mode, named_capture, one_or_more, or,
     printable, text, whitespace, word, zero_or_more, zero_or_one,
@@ -17,48 +18,49 @@ use human_regex::{
 pub struct InterpreterResults {
     /// Raw output
     pub raw: String,
-    /// Scalar variables
-    scalars: HashMap<String, f64>,
-    /// Matrix variables
-    matrices: HashMap<String, Vec<Vec<f64>>>,
-    /// String variables
-    strings: HashMap<String, String>,
-    /// String variables
-    cell_arrays: HashMap<String, OctaveType>,
+    /// Variables
+    variables: HashMap<String, OctaveType>,
 }
 
 impl InterpreterResults {
-    /// Get unchecked
+    /// Get a variable by name, if it exists
+    pub fn get(&self, name: &str) -> Option<OctaveType> {
+        self.variables.get(name).cloned()
+    }
+    /// Get a variable by name and convert it ot an f64, if the variable exists and is convertible.
+    pub fn get_scalar(&self, name: &str) -> Option<f64> {
+        self.variables
+            .get(name)
+            .cloned()
+            .and_then(|ot| ot.try_into_f64().ok())
+    }
+    /// Get a variable by name and convert it ot a Vec<Vec<f64>>, if the variable exists and is
+    /// convertible.
+    pub fn get_matrix(&self, name: &str) -> Option<Vec<Vec<f64>>> {
+        self.variables
+            .get(name)
+            .cloned()
+            .and_then(|ot| ot.try_into_vec_f64().ok())
+    }
+    /// Get a variable by name and convert it ot a String, if the variable exists and is convertible.
+    pub fn get_string(&self, name: &str) -> Option<String> {
+        self.variables
+            .get(name)
+            .cloned()
+            .and_then(|ot| ot.try_into_string().ok())
+    }
+    /// Get a variable by name and convert it ot a Vec<Vec<OctaveType>>, if the variable exists and
+    /// is convertible.
+    pub fn get_cell_array(&self, name: &str) -> Option<OctaveType> {
+        self.variables.get(name).cloned()
+    }
+    /// Get a variable without checking whether or not it exists first. Panics if variable doesn't
+    /// exist.
     pub fn get_unchecked(&self, name: &str) -> OctaveType {
-        match self.get_scalar_named(name) {
-            None => match self.get_matrix_named(name) {
-                None => match self.get_string_named(name) {
-                    None => match self.get_cell_array_named(name) {
-                        None => OctaveType::Empty,
-                        Some(cell_array) => cell_array,
-                    },
-                    Some(string) => OctaveType::String(string),
-                },
-                Some(matrix) => OctaveType::Matrix(matrix),
-            },
-            Some(scalar) => OctaveType::Scalar(scalar),
-        }
-    }
-    /// Get a scalar by name
-    pub fn get_scalar_named(&self, name: &str) -> Option<f64> {
-        self.scalars.get(name).cloned()
-    }
-    /// Get a matrix by name
-    pub fn get_matrix_named(&self, name: &str) -> Option<Vec<Vec<f64>>> {
-        self.matrices.get(name).cloned()
-    }
-    /// Get a string by name
-    pub fn get_string_named(&self, name: &str) -> Option<String> {
-        self.strings.get(name).cloned()
-    }
-    /// Get a string by name
-    pub fn get_cell_array_named(&self, name: &str) -> Option<OctaveType> {
-        self.cell_arrays.get(name).cloned()
+        self.variables
+            .get(name)
+            .cloned()
+            .expect(&format!("The variable `{name}` does not exist"))
     }
 }
 
@@ -66,10 +68,7 @@ impl Default for InterpreterResults {
     fn default() -> Self {
         InterpreterResults {
             raw: "".to_string(),
-            scalars: Default::default(),
-            matrices: Default::default(),
-            strings: Default::default(),
-            cell_arrays: Default::default(),
+            variables: Default::default(),
         }
     }
 }
@@ -92,7 +91,7 @@ impl From<String> for InterpreterResults {
 
         for capture in scalar_match.to_regex().captures_iter(&output) {
             let (name, value) = parse_scalar_capture(capture);
-            results.scalars.insert(name, value);
+            results.variables.insert(name, OctaveType::Scalar(value));
         }
 
         // Make a string capture and parse the output
@@ -111,7 +110,7 @@ impl From<String> for InterpreterResults {
 
         for capture in string_match.to_regex().captures_iter(&output) {
             let (name, value) = parse_string_capture(capture);
-            results.strings.insert(name, value);
+            results.variables.insert(name, OctaveType::String(value));
         }
 
         // Make a matrix match and parse the output
@@ -130,28 +129,8 @@ impl From<String> for InterpreterResults {
 
         for capture in matrix_match.to_regex().captures_iter(&output) {
             let (name, value) = parse_matrix_capture(capture);
-            results.matrices.insert(name, value);
+            results.variables.insert(name, OctaveType::Matrix(value));
         }
-
-        // # name: g
-        // # type: cell
-        // # rows: 1
-        // # columns: 2
-        // # name: <cell-element>
-        // # type: sq_string
-        // # elements: 1
-        // # length: 1
-        // a
-        //
-        //
-        //
-        // # name: <cell-element>
-        // # type: sq_string
-        // # elements: 1
-        // # length: 1
-        // b
-        //
-        //
 
         // Make a cell-array match and parse the output
         let cell_array_match = multi_line_mode(
@@ -186,10 +165,10 @@ impl From<String> for InterpreterResults {
                 )),
         );
 
-        results.cell_arrays = parse_cell_array_capture(
+        results.variables.extend(parse_cell_array_capture(
             cell_array_match.to_regex().captures_iter(&output),
             cell_element_match.to_regex().captures_iter(&output),
-        );
+        ));
 
         results
     }

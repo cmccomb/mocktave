@@ -86,7 +86,8 @@ impl Display for InterpreterResults {
             .clone();
         keys.sort();
         for key in keys {
-            write!(f, "\n\n{key} = \n{:#?}", &self.variables.get(key).unwrap());
+            write!(f, "\n\n{key} = \n{:#?}", &self.variables.get(key).unwrap())
+                .expect("Could not write")
         }
         Ok(())
     }

@@ -5,7 +5,10 @@
 //! ```
 //! ## Wrap an Octave function
 //! ```rust
-#![doc = include_str ! ("../examples/primes.rs")]
+#![doc = include_str ! ("../examples/primes1.rs")]
+//! ```
+//! ```rust
+#![doc = include_str ! ("../examples/primes2.rs")]
 //! ```
 //! ## Access linear algebra
 //! Linear algebra is one of the areas where rust is (currently) immature. Accessing Octave can enable better testing

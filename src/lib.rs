@@ -28,16 +28,16 @@ pub fn eval(input: &str) -> InterpreterResults {
 /// This function provides the ability to wrap Octave functions for convenient later use.
 /// ```
 /// let primes = mocktave::wrap("primes".into());
-/// let all_primes_less_than_100 = primes([100]);
-/// assert_eq!(all_primes_less_than_100.try_into_vec_f64().unwrap(), vec![vec![2.0, 3.0, 5.0, 7.0,
-///     11.0, 13.0, 17.0, 19.0, 23.0, 29.0, 31.0, 37.0, 41.0, 43.0, 47.0, 53.0, 59.0, 61.0, 67.0,
-///     71.0, 73.0, 79.0, 83.0, 89.0, 97.0]])
+/// let all_primes_less_than_100: Vec<Vec<i32>> = primes([100]);
+/// assert_eq!(all_primes_less_than_100, vec![vec![2_i32, 3, 5, 7,
+///     11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
+///     71, 73, 79, 83, 89, 97]])
 /// ```
 /// Use functions with multiple inputs
 /// ```
 /// let max = mocktave::wrap("max".into());
-/// let should_be_101 = max([100, 101]);
-/// assert_eq!(should_be_101.try_into_f64().unwrap(), 101.0_f64);
+/// let should_be_101: i32 = max([100, 101]);
+/// assert_eq!(should_be_101, 101_i32);
 /// ```
 /// And even use functions with disimilar types
 /// ```
@@ -47,27 +47,30 @@ pub fn eval(input: &str) -> InterpreterResults {
 ///     OctaveType::Matrix(vec![vec![0.0; 2]; 2]),
 ///     OctaveType::Scalar(2.0)
 /// ];
-/// let should_be_zero: f64 = norm(x).into();
+/// let should_be_zero: f64 = norm(x);
 /// assert_eq!(should_be_zero, 0.0_f64);
 /// ```
-pub fn wrap<Y>(function: String) -> Box<dyn Fn(Y) -> OctaveType>
+pub fn wrap<Y, Z>(function: String) -> Box<dyn Fn(Y) -> Z>
 where
     Y: IntoIterator,
     <Y as IntoIterator>::Item: ToString,
+    Z: From<OctaveType>,
 {
     Box::new(move |inputs| {
         let mut args = vec![String::new(); 0];
         for input in inputs.into_iter() {
             args.push(input.to_string());
         }
-        eval(
-            &("result_of_function = ".to_owned()
-                + function.as_str()
-                + "("
-                + &args.join(", ")
-                + ")"),
+        Z::from(
+            eval(
+                &("result_of_function = ".to_owned()
+                    + function.as_str()
+                    + "("
+                    + &args.join(", ")
+                    + ")"),
+            )
+            .get_unchecked("result_of_function"),
         )
-        .get_unchecked("result_of_function")
     })
 }
 

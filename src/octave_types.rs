@@ -19,7 +19,7 @@ pub enum OctaveType {
     /// A cell array, which is essentially a matrix of non-numeric types.  The underlying type is
     /// `Vec<Vec<OctaveType>>`.
     CellArray(Vec<Vec<OctaveType>>),
-    /// Something a value might be empty. This is mostly for default.
+    /// Something a value might be empty. This is mostly for the implementation of `Default`.
     Empty,
     /// Sometimes a value might be an error too.
     Error(String),
@@ -41,7 +41,7 @@ impl Display for OctaveType {
                     format!("{scalar}")
                 }
                 OctaveType::ComplexScalar(im, re) => {
-                    format!("{im}{re:+}j")
+                    format!("{im}{re:+}i")
                 }
                 OctaveType::Matrix(vec) => {
                     format!("{vec:?}")
@@ -145,13 +145,6 @@ impl From<OctaveType> for () {
     }
 }
 
-// Implement into f64
-impl From<OctaveType> for f64 {
-    fn from(value: OctaveType) -> Self {
-        value.try_into_f64().unwrap()
-    }
-}
-
 // Implement into f32
 impl From<OctaveType> for f32 {
     fn from(value: OctaveType) -> Self {
@@ -159,10 +152,94 @@ impl From<OctaveType> for f32 {
     }
 }
 
-// Implement into String
-impl From<OctaveType> for String {
+// Implement into f64
+impl From<OctaveType> for f64 {
     fn from(value: OctaveType) -> Self {
-        value.try_into_string().unwrap()
+        value.try_into_f64().unwrap()
+    }
+}
+
+// Implement into isize
+impl From<OctaveType> for isize {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as isize
+    }
+}
+
+// Implement into i8
+impl From<OctaveType> for i8 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as i8
+    }
+}
+
+// Implement into i16
+impl From<OctaveType> for i16 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as i16
+    }
+}
+
+// Implement into i32
+impl From<OctaveType> for i32 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as i32
+    }
+}
+
+// Implement into i64
+impl From<OctaveType> for i64 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as i64
+    }
+}
+
+// Implement into i128
+impl From<OctaveType> for i128 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as i128
+    }
+}
+
+// Implement into usize
+impl From<OctaveType> for usize {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as usize
+    }
+}
+
+// Implement into u8
+impl From<OctaveType> for u8 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as u8
+    }
+}
+
+// Implement into u16
+impl From<OctaveType> for u16 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as u16
+    }
+}
+
+// Implement into u32
+impl From<OctaveType> for u32 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as u32
+    }
+}
+
+// Implement into u64
+impl From<OctaveType> for u64 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as u64
+    }
+}
+
+// Implement into u128
+impl From<OctaveType> for u128 {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_f64().unwrap() as u128
     }
 }
 
@@ -182,6 +259,25 @@ impl From<OctaveType> for Vec<Vec<f32>> {
             .into_iter()
             .map(|row| row.into_iter().map(|el| el as f32).collect::<Vec<f32>>())
             .collect::<Vec<Vec<f32>>>()
+    }
+}
+
+// Implement into Vec<Vec<i32>
+impl From<OctaveType> for Vec<Vec<i32>> {
+    fn from(value: OctaveType) -> Self {
+        value
+            .try_into_vec_f64()
+            .unwrap()
+            .into_iter()
+            .map(|row| row.into_iter().map(|el| el as i32).collect::<Vec<i32>>())
+            .collect::<Vec<Vec<i32>>>()
+    }
+}
+
+// Implement into String
+impl From<OctaveType> for String {
+    fn from(value: OctaveType) -> Self {
+        value.try_into_string().unwrap()
     }
 }
 

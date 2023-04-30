@@ -37,10 +37,10 @@ assert_eq!(all_primes_less_than_100,
 But hey, let's say we're even lazier! We love shortcuts around here:
 ```rust
 let primes = mocktave::wrap("primes".into());
-let all_primes_less_than_100: Vec<Vec<i32>> = primes([100]);
-assert_eq!(all_primes_less_than_100, vec![vec![2_i32, 3, 5, 7,
+let all_primes_less_than_100: Vec<i32> = primes([100]);
+assert_eq!(all_primes_less_than_100, vec![2_i32, 3, 5, 7,
     11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
-    71, 73, 79, 83, 89, 97]]);
+    71, 73, 79, 83, 89, 97]);
 ```
 
 Its important to note that this function is definitely *__NOT__* 🚀Blazingly Fast™️🚀, since it starts, runs, and closes 

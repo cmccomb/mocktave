@@ -1,4 +1,4 @@
-// use num::cast::AsPrimitive;
+use num::FromPrimitive;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -25,12 +25,6 @@ pub enum OctaveType {
     /// Sometimes a value might be an error too.
     Error(String),
 }
-//
-// impl AsPrimitive<T> for OctaveType {
-//     fn as_(self) -> T {
-//         todo!()
-//     }
-// }
 
 impl Default for OctaveType {
     fn default() -> Self {
@@ -250,41 +244,54 @@ impl From<OctaveType> for u128 {
     }
 }
 
-// Implement into Vec<Vec<f64>
-impl From<OctaveType> for Vec<Vec<f64>> {
-    fn from(value: OctaveType) -> Self {
-        value.try_into_vec_f64().unwrap()
-    }
-}
-
-// Implement into Vec<Vec<f32>
-impl From<OctaveType> for Vec<Vec<f32>> {
+// Implement into `Vec<Vec<T>>`
+impl<T: From<OctaveType> + num::traits::AsPrimitive<T>> From<OctaveType> for Vec<Vec<T>> {
     fn from(value: OctaveType) -> Self {
         value
             .try_into_vec_f64()
             .unwrap()
             .into_iter()
-            .map(|row| row.into_iter().map(|el| el as f32).collect::<Vec<f32>>())
-            .collect::<Vec<Vec<f32>>>()
+            .map(|row| {
+                row.into_iter()
+                    .map(|el| T::from(OctaveType::Scalar(el)))
+                    .collect::<Vec<T>>()
+            })
+            .collect::<Vec<Vec<T>>>()
     }
 }
 
-// Implement into `Vec<Vec<i32>>`
-impl From<OctaveType> for Vec<Vec<i32>> {
-    fn from(value: OctaveType) -> Self {
-        value
-            .try_into_vec_f64()
-            .unwrap()
-            .into_iter()
-            .map(|row| row.into_iter().map(|el| el as i32).collect::<Vec<i32>>())
-            .collect::<Vec<Vec<i32>>>()
-    }
-}
+// // Implement into Vec<i32>
+// impl<T: FromPrimitive> From<OctaveType> for Vec<T> {
+//     fn from(value: OctaveType) -> Self {
+//         let new = value.try_into_vec_f64().unwrap();
+//
+//         let w = new.len();
+//         let h = new[0].len();
+//
+//         if w == 1 {
+//             new[0]
+//                 .clone()
+//                 .into_iter()
+//                 .map(|el| T::from(el))
+//                 .collect::<Vec<T>>()
+//         } else if h == 1 {
+//             new.clone()
+//                 .into_iter()
+//                 .map(|el| T::from(el))
+//                 .collect::<Vec<T>>()
+//         } else {
+//             panic!()
+//         }
+//     }
+// }
+
+trait MarkerType {}
+impl MarkerType for i32 {}
 
 // Implement into Vec<i32>
-impl From<OctaveType> for Vec<i32> {
+impl<T: MarkerType + From<OctaveType>> From<OctaveType> for Vec<T> {
     fn from(value: OctaveType) -> Self {
-        let new = value.try_into_vec_f64().unwrap();
+        let new: Vec<Vec<f64>> = value.try_into_vec_f64().unwrap();
 
         let w = new.len();
         let h = new[0].len();
@@ -293,13 +300,13 @@ impl From<OctaveType> for Vec<i32> {
             new[0]
                 .clone()
                 .into_iter()
-                .map(|el| el as i32)
-                .collect::<Vec<i32>>()
+                .map(|el| T::from(OctaveType::Scalar(el)))
+                .collect::<Vec<T>>()
         } else if h == 1 {
             new.clone()
                 .into_iter()
-                .map(|el| el[0] as i32)
-                .collect::<Vec<i32>>()
+                .map(|el| T::from(OctaveType::Scalar(el[0])))
+                .collect::<Vec<T>>()
         } else {
             panic!()
         }

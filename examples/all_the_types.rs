@@ -29,12 +29,13 @@ fn main() {
     let _g2: Vec<Vec<mocktave::OctaveType>> = results.get_unchecked("g").into();
 
     let _a3: &mocktave::OctaveType = &results["a"];
-    let _c3: &mocktave::OctaveType = &results["b"];
-    let _d3: &mocktave::OctaveType = &results["c"];
-    let _e3: &mocktave::OctaveType = &results["d"];
+    let _b3: &mocktave::OctaveType = &results["b"];
+    let _c3: &mocktave::OctaveType = &results["c"];
+    let _d3: &mocktave::OctaveType = &results["d"];
     let _e3: &mocktave::OctaveType = &results["e"];
     let _f3: &mocktave::OctaveType = &results["f"];
     let _g3: &mocktave::OctaveType = &results["g"];
+    let _h3: &mocktave::OctaveType = &results["h"];
 
     println!("{results}");
 }

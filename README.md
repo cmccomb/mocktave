@@ -16,6 +16,8 @@ This crate uses a disgusting hack: Octave is run in the background in Docker. Fo
 # Example Usage
 Let's say we need a function to compute prime numbers, but we're too lazy to write one ourselves. Let's make a thin 
 wrapper around the Octave `primes` function! That function will look like this:
+
+But hey, let's say we're even lazier! We love shortcuts around here:
 ```rust
 fn primes(less_than_n: usize) -> Vec<Vec<f64>> {
     mocktave::eval(                // Start an evaluation
@@ -29,15 +31,16 @@ fn primes(less_than_n: usize) -> Vec<Vec<f64>> {
 }
 
 let all_primes_less_than_100 = primes(100);
+
 assert_eq!(all_primes_less_than_100, 
            vec![vec![2.0, 3.0, 5.0, 7.0, 11.0, 13.0, 17.0, 19.0, 23.0, 
                      29.0, 31.0, 37.0, 41.0, 43.0, 47.0, 53.0, 59.0, 
                      61.0, 67.0, 71.0, 73.0, 79.0, 83.0, 89.0, 97.0]]);
 ```
-But hey, let's say we're even lazier! We love shortcuts around here:
 ```rust
 let primes = mocktave::wrap("primes".into());
 let all_primes_less_than_100: Vec<i32> = primes([100]);
+
 assert_eq!(all_primes_less_than_100, vec![2_i32, 3, 5, 7,
     11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
     71, 73, 79, 83, 89, 97]);

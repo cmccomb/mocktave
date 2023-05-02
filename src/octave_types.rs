@@ -152,11 +152,21 @@ impl From<OctaveType> for f32 {
         value.try_into_f64().unwrap() as f32
     }
 }
+impl From<f32> for OctaveType {
+    fn from(value: f32) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for f64 {}
 impl From<OctaveType> for f64 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap()
+    }
+}
+impl From<f64> for OctaveType {
+    fn from(value: f64) -> Self {
+        OctaveType::Scalar(value)
     }
 }
 
@@ -166,11 +176,21 @@ impl From<OctaveType> for isize {
         value.try_into_f64().unwrap() as isize
     }
 }
+impl From<isize> for OctaveType {
+    fn from(value: isize) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for i8 {}
 impl From<OctaveType> for i8 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i8
+    }
+}
+impl From<i8> for OctaveType {
+    fn from(value: i8) -> Self {
+        OctaveType::Scalar(value as f64)
     }
 }
 
@@ -180,11 +200,21 @@ impl From<OctaveType> for i16 {
         value.try_into_f64().unwrap() as i16
     }
 }
+impl From<i16> for OctaveType {
+    fn from(value: i16) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for i32 {}
 impl From<OctaveType> for i32 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i32
+    }
+}
+impl From<i32> for OctaveType {
+    fn from(value: i32) -> Self {
+        OctaveType::Scalar(value as f64)
     }
 }
 
@@ -194,11 +224,21 @@ impl From<OctaveType> for i64 {
         value.try_into_f64().unwrap() as i64
     }
 }
+impl From<i64> for OctaveType {
+    fn from(value: i64) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for i128 {}
 impl From<OctaveType> for i128 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i128
+    }
+}
+impl From<i128> for OctaveType {
+    fn from(value: i128) -> Self {
+        OctaveType::Scalar(value as f64)
     }
 }
 
@@ -208,11 +248,21 @@ impl From<OctaveType> for usize {
         value.try_into_f64().unwrap() as usize
     }
 }
+impl From<usize> for OctaveType {
+    fn from(value: usize) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for u8 {}
 impl From<OctaveType> for u8 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u8
+    }
+}
+impl From<u8> for OctaveType {
+    fn from(value: u8) -> Self {
+        OctaveType::Scalar(value as f64)
     }
 }
 
@@ -222,11 +272,21 @@ impl From<OctaveType> for u16 {
         value.try_into_f64().unwrap() as u16
     }
 }
+impl From<u16> for OctaveType {
+    fn from(value: u16) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for u32 {}
 impl From<OctaveType> for u32 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u32
+    }
+}
+impl From<u32> for OctaveType {
+    fn from(value: u32) -> Self {
+        OctaveType::Scalar(value as f64)
     }
 }
 
@@ -236,11 +296,21 @@ impl From<OctaveType> for u64 {
         value.try_into_f64().unwrap() as u64
     }
 }
+impl From<u64> for OctaveType {
+    fn from(value: u64) -> Self {
+        OctaveType::Scalar(value as f64)
+    }
+}
 
 impl Primitive for u128 {}
 impl From<OctaveType> for u128 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u128
+    }
+}
+impl From<u128> for OctaveType {
+    fn from(value: u128) -> Self {
+        OctaveType::Scalar(value as f64)
     }
 }
 
@@ -259,32 +329,21 @@ impl<T: From<OctaveType> + Primitive> From<OctaveType> for Vec<Vec<T>> {
     }
 }
 
-// // Implement into Vec<i32>
-// impl<T: FromPrimitive> From<OctaveType> for Vec<T> {
-//     fn from(value: OctaveType) -> Self {
-//         let new = value.try_into_vec_f64().unwrap();
-//
-//         let w = new.len();
-//         let h = new[0].len();
-//
-//         if w == 1 {
-//             new[0]
-//                 .clone()
-//                 .into_iter()
-//                 .map(|el| T::from(el))
-//                 .collect::<Vec<T>>()
-//         } else if h == 1 {
-//             new.clone()
-//                 .into_iter()
-//                 .map(|el| T::from(el))
-//                 .collect::<Vec<T>>()
-//         } else {
-//             panic!()
-//         }
-//     }
-// }
+impl<T: Into<OctaveType> + Primitive> From<Vec<Vec<T>>> for OctaveType {
+    fn from(value: Vec<Vec<T>>) -> Self {
+        OctaveType::Matrix(
+            value
+                .into_iter()
+                .map(|row| {
+                    row.into_iter()
+                        .map(|el| el.into().try_into_f64().unwrap())
+                        .collect::<Vec<f64>>()
+                })
+                .collect::<Vec<Vec<f64>>>(),
+        )
+    }
+}
 
-// Implement into Vec<i32>
 impl<T: Primitive + From<OctaveType>> From<OctaveType> for Vec<T> {
     fn from(value: OctaveType) -> Self {
         let new: Vec<Vec<f64>> = value.try_into_vec_f64().unwrap();
@@ -306,6 +365,15 @@ impl<T: Primitive + From<OctaveType>> From<OctaveType> for Vec<T> {
         } else {
             panic!()
         }
+    }
+}
+
+impl<T: Into<OctaveType> + Primitive> From<Vec<T>> for OctaveType {
+    fn from(value: Vec<T>) -> Self {
+        OctaveType::Matrix(vec![value
+            .into_iter()
+            .map(|el| el.into().try_into_f64().unwrap())
+            .collect::<Vec<f64>>()])
     }
 }
 

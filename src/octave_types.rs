@@ -1,4 +1,3 @@
-use num::FromPrimitive;
 use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -139,113 +138,113 @@ impl OctaveType {
     }
 }
 
-// Implement into empty
+trait Primitive {}
+
 impl From<OctaveType> for () {
     fn from(_value: OctaveType) -> Self {
         ()
     }
 }
 
-// Implement into f32
+impl Primitive for f32 {}
 impl From<OctaveType> for f32 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as f32
     }
 }
 
-// Implement into f64
+impl Primitive for f64 {}
 impl From<OctaveType> for f64 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap()
     }
 }
 
-// Implement into isize
+impl Primitive for isize {}
 impl From<OctaveType> for isize {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as isize
     }
 }
 
-// Implement into i8
+impl Primitive for i8 {}
 impl From<OctaveType> for i8 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i8
     }
 }
 
-// Implement into i16
+impl Primitive for i16 {}
 impl From<OctaveType> for i16 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i16
     }
 }
 
-// Implement into i32
+impl Primitive for i32 {}
 impl From<OctaveType> for i32 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i32
     }
 }
 
-// Implement into i64
+impl Primitive for i64 {}
 impl From<OctaveType> for i64 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i64
     }
 }
 
-// Implement into i128
+impl Primitive for i128 {}
 impl From<OctaveType> for i128 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as i128
     }
 }
 
-// Implement into usize
+impl Primitive for usize {}
 impl From<OctaveType> for usize {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as usize
     }
 }
 
-// Implement into u8
+impl Primitive for u8 {}
 impl From<OctaveType> for u8 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u8
     }
 }
 
-// Implement into u16
+impl Primitive for u16 {}
 impl From<OctaveType> for u16 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u16
     }
 }
 
-// Implement into u32
+impl Primitive for u32 {}
 impl From<OctaveType> for u32 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u32
     }
 }
 
-// Implement into u64
+impl Primitive for u64 {}
 impl From<OctaveType> for u64 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u64
     }
 }
 
-// Implement into u128
+impl Primitive for u128 {}
 impl From<OctaveType> for u128 {
     fn from(value: OctaveType) -> Self {
         value.try_into_f64().unwrap() as u128
     }
 }
 
-// Implement into `Vec<Vec<T>>`
-impl<T: From<OctaveType> + num::traits::AsPrimitive<T>> From<OctaveType> for Vec<Vec<T>> {
+impl<T: From<OctaveType> + Primitive> From<OctaveType> for Vec<Vec<T>> {
     fn from(value: OctaveType) -> Self {
         value
             .try_into_vec_f64()
@@ -285,12 +284,8 @@ impl<T: From<OctaveType> + num::traits::AsPrimitive<T>> From<OctaveType> for Vec
 //     }
 // }
 
-trait MarkerType {}
-impl MarkerType for i32 {}
-impl MarkerType for usize {}
-
 // Implement into Vec<i32>
-impl<T: MarkerType + From<OctaveType>> From<OctaveType> for Vec<T> {
+impl<T: Primitive + From<OctaveType>> From<OctaveType> for Vec<T> {
     fn from(value: OctaveType) -> Self {
         let new: Vec<Vec<f64>> = value.try_into_vec_f64().unwrap();
 

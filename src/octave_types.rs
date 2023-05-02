@@ -287,6 +287,7 @@ impl<T: From<OctaveType> + num::traits::AsPrimitive<T>> From<OctaveType> for Vec
 
 trait MarkerType {}
 impl MarkerType for i32 {}
+impl MarkerType for usize {}
 
 // Implement into Vec<i32>
 impl<T: MarkerType + From<OctaveType>> From<OctaveType> for Vec<T> {

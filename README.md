@@ -2,7 +2,7 @@
 [![Crates.io](https://img.shields.io/crates/v/mocktave.svg)](https://crates.io/crates/mocktave)
 [![docs.rs](https://img.shields.io/docsrs/mocktave/latest?logo=rust)](https://docs.rs/mocktave)
 
-![](https://raw.githubusercontent.com/cmccomb/mocktave/master/mocktave.png)
+![](https://raw.githubusercontent.com/cmccomb/mocktave/cb1c11a7bf512f3cc2b392bf53a99c7e70a5bbab/mocktave.png)
 
 # Access Octave/MATLAB from Rust
 As much as I hate to say it, there is a lot of useful code living in .m files. Sometimes it can be nice to access that 
@@ -41,9 +41,9 @@ assert_eq!(all_primes_less_than_100,
 ```
 ```rust
 let primes = mocktave::wrap("primes".into());
-let all_primes_less_than_100: Vec<i32> = primes([100]);
+let all_primes_less_than_100: Vec<usize> = primes([100]);
 
-assert_eq!(all_primes_less_than_100, vec![2_i32, 3, 5, 7,
+assert_eq!(all_primes_less_than_100, vec![2_usize, 3, 5, 7,
     11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67,
     71, 73, 79, 83, 89, 97]);
 ```

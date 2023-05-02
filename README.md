@@ -2,6 +2,8 @@
 [![Crates.io](https://img.shields.io/crates/v/mocktave.svg)](https://crates.io/crates/mocktave)
 [![docs.rs](https://img.shields.io/docsrs/mocktave/latest?logo=rust)](https://docs.rs/mocktave)
 
+![](https://raw.githubusercontent.com/cmccomb/mocktave/master/mocktave.png)
+
 # Access Octave/MATLAB from Rust
 As much as I hate to say it, there is a lot of useful code living in .m files. Sometimes it can be nice to access that 
 code through Rust. There are at least two use cases I can think of:

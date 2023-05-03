@@ -480,6 +480,7 @@ impl<T: Into<OctaveType> + Primitive> From<Vec<T>> for OctaveType {
     }
 }
 
+/// For converting `OctaveType::String` into a proper rust `String`
 /// ```
 /// use mocktave::OctaveType;
 /// let x: String = OctaveType::String("asdf".to_string()).into();
@@ -491,6 +492,7 @@ impl From<OctaveType> for String {
     }
 }
 
+/// For converting `OctaveType::CellArray` into `Vec<Vec<OctaveType>>`
 /// ```
 /// use mocktave::OctaveType;
 /// let x: Vec<Vec<OctaveType>> = OctaveType::CellArray(vec![vec![OctaveType::default(); 1]]).into();

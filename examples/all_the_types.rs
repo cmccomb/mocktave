@@ -12,6 +12,7 @@ fn main() {
 
     let results = mocktave::eval(&script);
 
+    // Access the types using explicit conversion
     let _a: f64 = results.get_scalar("a").unwrap();
     let _b: Vec<Vec<f64>> = results.get_matrix("b").unwrap();
     let _c: String = results.get_string("c").unwrap();
@@ -20,6 +21,7 @@ fn main() {
     let _f: Vec<Vec<f64>> = results.get_matrix("f").unwrap();
     let _g: Vec<Vec<mocktave::OctaveType>> = results.get_cell_array("g").unwrap();
 
+    // Access the types using implicit conversion
     let _a2: f64 = results.get_unchecked("a").into();
     let _b2: Vec<Vec<f64>> = results.get_unchecked("b").into();
     let _c2: String = results.get_unchecked("c").into();
@@ -28,6 +30,7 @@ fn main() {
     let _f2: Vec<Vec<f32>> = results.get_unchecked("f").into();
     let _g2: Vec<Vec<mocktave::OctaveType>> = results.get_unchecked("g").into();
 
+    // Directly index to access the underlying value
     let _a3: &mocktave::OctaveType = &results["a"];
     let _b3: &mocktave::OctaveType = &results["b"];
     let _c3: &mocktave::OctaveType = &results["c"];

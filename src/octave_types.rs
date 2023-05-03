@@ -236,11 +236,18 @@ impl From<OctaveType> for isize {
         value.try_into_f64().unwrap() as isize
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_isize.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<isize> for OctaveType {
     fn from(value: isize) -> Self {
         OctaveType::Scalar(value as f64)
     }
 }
+
 /// ```
 /// use mocktave::OctaveType;
 /// let x: i8 = OctaveType::Scalar(1.0).into();
@@ -251,6 +258,12 @@ impl From<OctaveType> for i8 {
         value.try_into_f64().unwrap() as i8
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_i8.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<i8> for OctaveType {
     fn from(value: i8) -> Self {
         OctaveType::Scalar(value as f64)
@@ -267,6 +280,12 @@ impl From<OctaveType> for i16 {
         value.try_into_f64().unwrap() as i16
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_i16.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<i16> for OctaveType {
     fn from(value: i16) -> Self {
         OctaveType::Scalar(value as f64)
@@ -283,6 +302,12 @@ impl From<OctaveType> for i32 {
         value.try_into_f64().unwrap() as i32
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_i32.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<i32> for OctaveType {
     fn from(value: i32) -> Self {
         OctaveType::Scalar(value as f64)
@@ -299,6 +324,12 @@ impl From<OctaveType> for i64 {
         value.try_into_f64().unwrap() as i64
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_i64.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<i64> for OctaveType {
     fn from(value: i64) -> Self {
         OctaveType::Scalar(value as f64)
@@ -315,6 +346,12 @@ impl From<OctaveType> for i128 {
         value.try_into_f64().unwrap() as i128
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_i128.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<i128> for OctaveType {
     fn from(value: i128) -> Self {
         OctaveType::Scalar(value as f64)
@@ -331,6 +368,12 @@ impl From<OctaveType> for usize {
         value.try_into_f64().unwrap() as usize
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_usize.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<usize> for OctaveType {
     fn from(value: usize) -> Self {
         OctaveType::Scalar(value as f64)
@@ -347,6 +390,12 @@ impl From<OctaveType> for u8 {
         value.try_into_f64().unwrap() as u8
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_u8.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<u8> for OctaveType {
     fn from(value: u8) -> Self {
         OctaveType::Scalar(value as f64)
@@ -363,6 +412,12 @@ impl From<OctaveType> for u16 {
         value.try_into_f64().unwrap() as u16
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_u16.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<u16> for OctaveType {
     fn from(value: u16) -> Self {
         OctaveType::Scalar(value as f64)
@@ -379,6 +434,12 @@ impl From<OctaveType> for u32 {
         value.try_into_f64().unwrap() as u32
     }
 }
+
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_u32.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<u32> for OctaveType {
     fn from(value: u32) -> Self {
         OctaveType::Scalar(value as f64)
@@ -395,12 +456,20 @@ impl From<OctaveType> for u64 {
         value.try_into_f64().unwrap() as u64
     }
 }
+
+/// Convert a `u64` into an `OctaveType::Scalar`
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_u64.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<u64> for OctaveType {
     fn from(value: u64) -> Self {
         OctaveType::Scalar(value as f64)
     }
 }
 
+/// Convert an `OctaveType::Scalar` into a  `u128`
 /// ```
 /// use mocktave::OctaveType;
 /// let x: u128 = OctaveType::Scalar(1.0).into();
@@ -411,12 +480,32 @@ impl From<OctaveType> for u128 {
         value.try_into_f64().unwrap() as u128
     }
 }
+
+/// Convert a `u128` into an `OctaveType::Scalar`
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = 1_u128.into();
+/// assert_eq!(x, OctaveType::Scalar(1.0))
+/// ```
 impl From<u128> for OctaveType {
     fn from(value: u128) -> Self {
         OctaveType::Scalar(value as f64)
     }
 }
 
+/// Convert an `OctaveType::Matrix` into a `Vec<Vec<T>>`
+/// ```
+/// use mocktave::OctaveType;
+/// let x: Vec<Vec<usize>> = OctaveType::Matrix(vec![vec![0.0; 0]; 0]).into();
+/// assert_eq!(x, vec![vec![0_usize; 0]; 0])
+/// ```
+/// ```
+/// use mocktave::{OctaveType, wrap};
+/// let ones = wrap("ones".into());
+/// let mat: OctaveType = ones([3]);
+/// let x: Vec<Vec<usize>> = mat.into();
+/// assert_eq!(x, vec![vec![1_usize; 3]; 3])
+/// ```
 impl<T: From<OctaveType> + Primitive> From<OctaveType> for Vec<Vec<T>> {
     fn from(value: OctaveType) -> Self {
         value
@@ -480,7 +569,7 @@ impl<T: Into<OctaveType> + Primitive> From<Vec<T>> for OctaveType {
     }
 }
 
-/// For converting `OctaveType::String` into a proper rust `String`
+/// Convert an `OctaveType::String` into a proper rust `String`
 /// ```
 /// use mocktave::OctaveType;
 /// let x: String = OctaveType::String("asdf".to_string()).into();
@@ -492,7 +581,7 @@ impl From<OctaveType> for String {
     }
 }
 
-/// For converting `OctaveType::CellArray` into `Vec<Vec<OctaveType>>`
+/// Convert an `OctaveType::CellArray` into `Vec<Vec<OctaveType>>`
 /// ```
 /// use mocktave::OctaveType;
 /// let x: Vec<Vec<OctaveType>> = OctaveType::CellArray(vec![vec![OctaveType::default(); 1]]).into();

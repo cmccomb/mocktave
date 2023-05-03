@@ -259,32 +259,7 @@ impl<T: From<OctaveType> + Primitive> From<OctaveType> for Vec<Vec<T>> {
     }
 }
 
-// // Implement into Vec<i32>
-// impl<T: FromPrimitive> From<OctaveType> for Vec<T> {
-//     fn from(value: OctaveType) -> Self {
-//         let new = value.try_into_vec_f64().unwrap();
-//
-//         let w = new.len();
-//         let h = new[0].len();
-//
-//         if w == 1 {
-//             new[0]
-//                 .clone()
-//                 .into_iter()
-//                 .map(|el| T::from(el))
-//                 .collect::<Vec<T>>()
-//         } else if h == 1 {
-//             new.clone()
-//                 .into_iter()
-//                 .map(|el| T::from(el))
-//                 .collect::<Vec<T>>()
-//         } else {
-//             panic!()
-//         }
-//     }
-// }
-
-// Implement into Vec<i32>
+// Implement into Vec<T>
 impl<T: Primitive + From<OctaveType>> From<OctaveType> for Vec<T> {
     fn from(value: OctaveType) -> Self {
         let new: Vec<Vec<f64>> = value.try_into_vec_f64().unwrap();

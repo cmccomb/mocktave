@@ -81,7 +81,7 @@ impl Display for OctaveTryIntoError {
 impl Error for OctaveTryIntoError {}
 
 impl OctaveType {
-    /// Unwrap a scalar octave type into `f64`
+    /// Unwrap a `OctaveType::Scalar` into an `f64`
     /// ```
     /// let x: f64 = mocktave::OctaveType::Scalar(0.0).try_into_f64().unwrap();
     /// ```
@@ -95,7 +95,7 @@ impl OctaveType {
             ))
         }
     }
-    /// Unwrap a string octave type into `String`
+    /// Unwrap an `OctaveType::String` into a `String`
     /// ```
     /// let x: String = mocktave::OctaveType::String("0.0".to_string()).try_into_string().unwrap();
     /// ```
@@ -109,7 +109,7 @@ impl OctaveType {
             ))
         }
     }
-    /// Unwrap a matrix octave type into `Vec<Vec<f64>>`
+    /// Unwrap an `OctaveType::Matrix` into an `Vec<Vec<f64>>`
     /// ```
     /// let x: Vec<Vec<f64>> = mocktave::OctaveType::Matrix(vec![vec![0.0_f64;2];2]).try_into_vec_f64().unwrap();
     /// ```
@@ -120,7 +120,7 @@ impl OctaveType {
             Err(OctaveTryIntoError("This is not an instance of `OctaveType::Matrix` and therefore cannot be converted into Vec<Vec<f64>>.".to_string()))
         }
     }
-    /// Unwrap a cell array octave type into `Vec<Vec<OctaveType>>`
+    /// Unwrap an `OctaveType::CellArray` into an `Vec<Vec<OctaveType>>`
     /// ```
     /// let x: Vec<Vec<mocktave::OctaveType>> = mocktave::OctaveType::CellArray(vec![vec![mocktave::OctaveType::Scalar(1.0)]]).try_into_vec_octave_type().unwrap();
     /// ```
@@ -131,7 +131,18 @@ impl OctaveType {
             Err(OctaveTryIntoError("This is not an instance of `OctaveType::CellArray` and therefore cannot be converted into Vec<Vec<OctaveType>>.".to_string()))
         }
     }
-    /// Unwrap an Empty octave type into `()`
+    /// Unwrap an `OctaveType::ComplexScalar` into an `(f64, f64))`
+    /// ```
+    /// let x: (f64, f64) = mocktave::OctaveType::ComplexScalar(1.0, 1.0).try_into_tuple_f64().unwrap();
+    /// ```
+    pub fn try_into_tuple_f64(self) -> Result<(f64, f64), OctaveTryIntoError> {
+        if let OctaveType::ComplexScalar(im, re) = self {
+            return Ok((im, re));
+        } else {
+            Err(OctaveTryIntoError("This is not an instance of `OctaveType::CellArray` and therefore cannot be converted into Vec<Vec<OctaveType>>.".to_string()))
+        }
+    }
+    /// Unwrap an `OctaveType::Empty` into an `()`
     /// ```
     /// let x: () = mocktave::OctaveType::default().try_into_empty().unwrap();
     /// ```
@@ -612,6 +623,40 @@ impl<T: Into<OctaveType> + Primitive> From<Vec<T>> for OctaveType {
             .into_iter()
             .map(|el| el.into().try_into_f64().unwrap())
             .collect::<Vec<f64>>()])
+    }
+}
+
+/// Convert an `OctaveType::ComplexScalar` into a `(T, T)`
+/// ```
+/// use mocktave::OctaveType;
+/// let x: (usize, usize) = OctaveType::ComplexScalar(0.0, 0.0).into();
+/// assert_eq!(x, (0_usize, 0))
+/// ```
+impl<T: Primitive + From<OctaveType>> From<OctaveType> for (T, T) {
+    fn from(value: OctaveType) -> Self {
+        if let OctaveType::ComplexScalar(im, re) = value {
+            (
+                T::from(OctaveType::Scalar(im)),
+                T::from(OctaveType::Scalar(re)),
+            )
+        } else {
+            panic!("Cannot convert")
+        }
+    }
+}
+
+/// Convert a `(T, T)` into an `OctaveType::ComplexScalar`
+/// ```
+/// use mocktave::OctaveType;
+/// let x: OctaveType = (0.0, 0.0).into();
+/// assert_eq!(x, OctaveType::ComplexScalar(0.0, 0.0))
+/// ```
+impl<T: Into<OctaveType> + Primitive> From<(T, T)> for OctaveType {
+    fn from(value: (T, T)) -> Self {
+        OctaveType::ComplexScalar(
+            value.0.into().try_into_f64().unwrap(),
+            value.1.into().try_into_f64().unwrap(),
+        )
     }
 }
 

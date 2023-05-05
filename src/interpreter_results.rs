@@ -35,6 +35,13 @@ impl InterpreterResults {
             .cloned()
             .and_then(|ot| ot.try_into_f64().ok())
     }
+    /// Get a variable by name and convert it to an `(f64, f64)`, if the variable exists and is convertible.
+    pub fn get_complex_scalar(&self, name: &str) -> Option<(f64, f64)> {
+        self.variables
+            .get(name)
+            .cloned()
+            .and_then(|ot| ot.try_into_tuple_f64().ok())
+    }
     /// Get a variable by name and convert it ot a `Vec<Vec<f64>>`, if the variable exists and is
     /// convertible.
     pub fn get_matrix(&self, name: &str) -> Option<Vec<Vec<f64>>> {

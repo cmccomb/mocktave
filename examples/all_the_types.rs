@@ -20,15 +20,17 @@ fn main() {
     let _e: Vec<Vec<f64>> = results.get_matrix("e").unwrap();
     let _f: Vec<Vec<f64>> = results.get_matrix("f").unwrap();
     let _g: Vec<Vec<mocktave::OctaveType>> = results.get_cell_array("g").unwrap();
+    let _h: (f64, f64) = results.get_complex_scalar("h").unwrap();
 
     // Access the types using implicit conversion
-    let _a2: f64 = results.get_unchecked("a").into();
-    let _b2: Vec<Vec<f64>> = results.get_unchecked("b").into();
+    let _a2: f32 = results.get_unchecked("a").into();
+    let _b2: Vec<Vec<f32>> = results.get_unchecked("b").into();
     let _c2: String = results.get_unchecked("c").into();
     let _d2: String = results.get_unchecked("d").into();
     let _e2: Vec<Vec<f32>> = results.get_unchecked("e").into();
     let _f2: Vec<Vec<f32>> = results.get_unchecked("f").into();
     let _g2: Vec<Vec<mocktave::OctaveType>> = results.get_unchecked("g").into();
+    let _h2: (f32, f32) = results.get_unchecked("h").into();
 
     // Directly index to access the underlying value
     let _a3: &mocktave::OctaveType = &results["a"];

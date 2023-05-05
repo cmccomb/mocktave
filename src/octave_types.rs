@@ -27,8 +27,8 @@ pub enum OctaveType {
 /// Implementation of the Default trait
 /// ```
 /// use mocktave::OctaveType;
-/// let dflt = OctaveType::default();
-/// assert_eq!(dflt, OctaveType::Empty);
+/// let default = OctaveType::default();
+/// assert_eq!(default, OctaveType::Empty);
 /// ```
 impl Default for OctaveType {
     fn default() -> Self {

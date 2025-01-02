@@ -1,6 +1,6 @@
 [package]
 name = "mocktave"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 authors = ["Chris McComb <ccmcc2012@gmail.com>"]
 description = "Run Octave/MATLAB inside Rust"

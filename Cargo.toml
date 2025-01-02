@@ -19,13 +19,12 @@ docker = ["bollard", "futures-util", "tokio"]
 #brew-local = []
 
 [build-dependencies]
-minreq = {version = ">=2.6.0", features = ["json-using-serde", "https"], optional=true}
-serde_yaml = {version = ">=0.9.0", optional=true}
+minreq = {version = ">=2.13.0", features = ["json-using-serde", "https"], optional=true}
 decompress = {version = ">=0.6.0", optional=true}
 
 [dependencies]
-bollard = {version=">=0.14.0", features = ["buildkit"], optional=true}
+bollard = {version=">=0.18.0", features = ["buildkit"], optional=true}
 futures-util = {version = ">=0.3.0", optional=true}
 human_regex = "0.3.0"
-regex = ">=1.7.0"
-tokio = {version = ">=1.7.0", optional=true}
+regex = ">=1.11.0"
+tokio = { version = ">=1.42.0", optional = true, features = ["rt-multi-thread"] }

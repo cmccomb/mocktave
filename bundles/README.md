@@ -10,20 +10,18 @@ and extracts atomically into a hash-addressed user cache with cross-process
 locking. The executable uses the private Octave home; no installed Octave is
 selected as a fallback.
 
-## Current status
+## Release status
 
-- The Apple Silicon prototype includes Octave 11.3.0 and 79 dependent libraries.
-  It requires macOS 26 because that is the baseline of the packaging host's
-  binaries. This artifact does not establish compatibility with older macOS.
-- A relocated Rust executable has passed dense solves, sparse solves, FFTs, and
-  prime generation with an empty `PATH` and a fresh cache. Its extracted runtime
-  was audited to load only bundled libraries and Apple OS libraries.
-- `manifest.json` deliberately has no published targets. It must not advertise
-  nonexistent releases or unqualified platforms.
-- The manually triggered `bundled.yml` workflow qualifies macOS ARM64/Intel,
-  Linux ARM64/x86-64, and Windows x86-64 candidates. Only the local Apple Silicon
-  candidate has been run so far. Windows ARM64, Linux musl, and other targets
-  are not supported by these initial recipes.
+Version 0.1.6 includes qualified macOS ARM64/Intel and Linux ARM64/x86-64 runtimes.
+The [main README](../README.md#self-contained-applications) lists their minimum
+OS/glibc versions and Octave versions. Each target passed the bundled suite and a
+relocated consumer with an empty `PATH` and fresh cache on GitHub-hosted runners.
+macOS dynamic-load tracing also verified that numerical libraries were private.
+
+The Windows x86-64 candidate passed execution tests but remains unpublished until
+its corresponding sources are assembled. Windows ARM64, Linux musl, and other
+targets are not qualified. Never add an unqualified or unpublished target to
+`manifest.json`.
 
 ## Maintainer workflow
 
@@ -46,8 +44,10 @@ selected as a fallback.
 4. Publish qualified archives and their corresponding source/notice artifacts
    to an immutable, versioned release. The workflow only uploads CI candidates;
    it does not publish a release or update the crate automatically.
-5. Register each artifact using `tools/register_bundle.py`. Review and commit
-   the resulting URL, target, version, and SHA-256 entries in `manifest.json`.
+5. Register each artifact using `tools/register_bundle.py --archive RUNTIME
+   --url RUNTIME_URL --sources SOURCES --source-url SOURCES_URL`. The tool checks
+   the runtime/source target and version and pins both checksums. Review and
+   commit the resulting entries in `manifest.json`.
 6. Test a consumer build using the published manifest without local override
    variables. Then publish the crate containing that manifest.
 
@@ -59,8 +59,8 @@ artifacts or explicitly use a controlled native/Docker environment.
 
 ## Local candidate testing
 
-These overrides are for maintainers before an archive is published. They are not
-part of the intended end-user installation.
+These overrides let maintainers test a new archive before publication. End users
+only enable the Cargo feature; they do not set these variables.
 
 ```sh
 python3 tools/package_macos.py \

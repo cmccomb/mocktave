@@ -23,8 +23,7 @@ assert_eq!(result.get_scalar("x"), Some(42.0));
 # Ok::<(), mocktave::Error>(())
 ```
 
-The new features are available in this checkout and have not yet been released
-on crates.io. Once the crate and qualified runtimes are published, select one of:
+Starting with version 0.1.6, select one of:
 
 ```sh
 # Self-contained: includes Octave and its numerical libraries.
@@ -37,9 +36,7 @@ cargo add mocktave --no-default-features --features native
 cargo add mocktave
 ```
 
-For development against this checkout, add `--path /path/to/mocktave`. Bundled
-development also needs a [maintainer runtime candidate](bundles/README.md#local-candidate-testing)
-until the runtime archives are published.
+For development against this checkout, add `--path /path/to/mocktave`.
 
 ## Runtime requirements
 
@@ -47,7 +44,7 @@ until the runtime archives are published.
   installation and runs the `gnuoctave/octave:8.1.0` image.
 - **Native:** runs an installed GNU Octave executable directly, without Docker or
   its Rust dependencies. Cargo does not download or install Octave.
-- **Bundled (release candidate):** embeds a verified, prebuilt Octave runtime and
+- **Bundled:** embeds a verified, prebuilt Octave runtime and
   its numerical libraries in your Rust application. No Octave installation,
   package manager, or numerical development libraries are required on the end
   user's machine. See [bundled runtime qualification](bundles/README.md) for the
@@ -60,35 +57,44 @@ There is no silent fallback to a different backend.
 
 ## Self-contained applications
 
-The `bundled` feature is implemented but **platform runtimes have not yet been
-published**. The local Apple Silicon prototype is verified on macOS 26. The
-qualification workflow prepares candidates for macOS, Linux, and Windows; these
-targets become supported only after their artifacts pass testing and enter the
-pinned manifest. A plain `bundled` build currently reports the missing release.
+The `bundled` feature supports these qualified targets:
 
-The equivalent dependency declaration for the local checkout is:
+| Platform | Rust target | Minimum OS / libc | Octave |
+| --- | --- | --- | --- |
+| Apple Silicon macOS | `aarch64-apple-darwin` | macOS 14 | 11.3.0 |
+| Intel macOS | `x86_64-apple-darwin` | macOS 15 | 11.3.0 |
+| ARM64 Linux | `aarch64-unknown-linux-gnu` | glibc 2.35 | 6.4.0 |
+| x86-64 Linux | `x86_64-unknown-linux-gnu` | glibc 2.35 | 6.4.0 |
+
+Windows bundles passed execution tests but are not published pending
+corresponding-source packaging. Windows, musl Linux, and other unsupported
+targets can use an installed Octave with `native`, or the Docker backend.
+Unsupported bundled targets fail at build time with an actionable error.
+
+The equivalent dependency declaration is:
 
 ```toml
 [dependencies]
-mocktave = { path = "../mocktave", default-features = false, features = ["bundled"] }
+mocktave = { version = "0.1.6", default-features = false, features = ["bundled"] }
 ```
 
-`default-features = false` disables the existing Docker default. For a published
-release, `cargo add` writes a version requirement in place of the local path.
+`default-features = false` disables the existing Docker default.
 
 Cargo downloads the archive for its target and verifies a pinned SHA-256. The
 archive is embedded into the resulting executable. At first use it extracts
 once into a user cache, protected by a cross-process lock and atomic installation.
-Subsequent use is offline. The application can be moved without carrying Cargo's
+All runtime use is offline, including the first extraction. The application can be moved without carrying Cargo's
 build directory or a separate Octave install. It needs a writable, executable
 cache directory; `MOCKTAVE_CACHE_DIR` optionally overrides the default location.
 
-This is a larger application: the current prototype carries about 30 MB of
-compressed runtime data. It provides the numerical CLI, with private BLAS/LAPACK,
+This is a larger application: runtimes carry tens of megabytes of compressed
+data. They provide the numerical CLI, with private BLAS/LAPACK,
 SuiteSparse, FFTW, and compiler runtime libraries. The OS ABI remains a dependency;
 GUI tools, plotting executables, package compilation, and third-party Octave
 packages are outside the bundled scope. Runtime redistribution must retain
-Octave's GPL and each bundled dependency's license/source obligations.
+Octave's GPL and each bundled dependency's license/source obligations. Runtime
+archives, notices, and corresponding source archives are available in the
+[versioned runtime release](https://github.com/cmccomb/mocktave/releases/tag/octave-runtime-0.1.6).
 
 ## Without Docker
 
@@ -97,12 +103,11 @@ Install [GNU Octave](https://octave.org/download), for example with
 On Windows, install GNU Octave and set `MOCKTAVE_OCTAVE` to its `octave-cli.exe`
 path if it is not on `PATH`.
 
-This feature is available in this checkout and has not yet been released on
-crates.io. To use the local checkout, add this dependency (adjust the path):
+Select the native feature in your dependency declaration:
 
 ```toml
 [dependencies]
-mocktave = { path = "../mocktave", default-features = false, features = ["native"] }
+mocktave = { version = "0.1.6", default-features = false, features = ["native"] }
 ```
 
 The existing `mocktave::eval`, `mocktave::wrap`, and `mocktave::Interpreter` APIs

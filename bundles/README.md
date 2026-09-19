@@ -38,9 +38,11 @@ selected as a fallback.
    adds Mocktave with `--no-default-features --features bundled`, and tests the
    ordinary `try_eval` API after relocating the application with an empty `PATH`.
 3. Retain the dependency license notices, package provenance, corresponding
-   sources, and build recipes needed for redistribution. The prototypes include
-   available notices and provenance but are not a completed source distribution.
-   Complete this release work before distributing runtime binaries publicly.
+   sources, and build recipes needed for redistribution. `collect_sources.py`
+   retrieves pinned Homebrew sources/patches or the exact Debian source packages
+   and includes the build and relocation recipes. Unix qualification uploads a
+   corresponding-source archive alongside each runtime. Windows candidates need
+   their corresponding-source collection completed separately before release.
 4. Publish qualified archives and their corresponding source/notice artifacts
    to an immutable, versioned release. The workflow only uploads CI candidates;
    it does not publish a release or update the crate automatically.

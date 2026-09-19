@@ -84,6 +84,24 @@ jobs:
         run: python tools/verify_standalone.py target/debug/examples/bundled.exe
       - name: Verify downstream installation with the bundled feature
         run: python tools/verify_feature_install.py --offline
+      - name: Enable corresponding-source repositories (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          paths = [Path('/etc/apt/sources.list'), *Path('/etc/apt/sources.list.d').glob('*.list')]
+          for path in paths:
+              if path.exists():
+                  text = path.read_text()
+                  source_lines = [line.replace('deb ', 'deb-src ', 1) for line in text.splitlines() if line.startswith('deb ')]
+                  path.write_text(text + '\n' + '\n'.join(source_lines) + '\n')
+          for path in Path('/etc/apt/sources.list.d').glob('*.sources'):
+              path.write_text(path.read_text().replace('Types: deb\n', 'Types: deb deb-src\n'))
+          PY
+          sudo apt-get update
+      - name: Collect corresponding sources and build recipes (Unix)
+        if: runner.os != 'Windows'
+        run: python tools/collect_sources.py --runtime work/runtime --destination work/corresponding-sources --archive work/artifacts/octave-sources.tar.gz
       - uses: actions/upload-artifact@v4
         with:
           name: octave-runtime-${{ matrix.os }}

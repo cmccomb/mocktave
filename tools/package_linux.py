@@ -85,9 +85,17 @@ def package(prefix, destination, archive):
     notices.mkdir()
     package_names = set()
     for source in mapping:
-        ownership = subprocess.run(["dpkg-query", "-S", str(source)], capture_output=True, text=True)
-        if ownership.returncode == 0:
-            package_names.update(line.split(": /", 1)[0] for line in ownership.stdout.splitlines())
+        # dpkg may record /lib while merged-/usr resolves the same file to /usr/lib.
+        candidates = [str(source)]
+        if str(source).startswith("/usr/lib/"):
+            candidates.append(str(source)[4:])
+        for candidate in candidates:
+            ownership = subprocess.run(["dpkg-query", "-S", candidate], capture_output=True, text=True)
+            if ownership.returncode == 0:
+                package_names.update(line.split(": /", 1)[0] for line in ownership.stdout.splitlines())
+                break
+        else:
+            raise RuntimeError(f"Cannot determine source-package provenance for {source}")
     versions = []
     for name in sorted(package_names):
         versions.append(run("dpkg-query", "-W", "-f=${binary:Package} ${Version} ${source:Package} ${source:Version}\n", name))

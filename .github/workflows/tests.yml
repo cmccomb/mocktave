@@ -18,3 +18,39 @@ jobs:
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
+  native:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Octave (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends octave
+      - name: Install Octave (macOS)
+        if: runner.os == 'macOS'
+        run: brew install octave
+      - name: Test native backend and documentation
+        run: cargo test --no-default-features --features native --verbose
+      - name: Check combined features
+        run: cargo check --features native --all-targets
+      - name: Test explicit native backend with both features enabled
+        run: cargo test --features native --test native
+  published-bundles:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15-intel, ubuntu-22.04, ubuntu-22.04-arm]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test the public runtime manifest without maintainer overrides
+        run: cargo test --no-default-features --features bundled --test bundled
+      - name: Test ordinary API documentation using the downloaded runtime
+        run: cargo test --no-default-features --features bundled --doc
+      - name: Test installation in a separate consumer without installed Octave
+        run: python tools/verify_feature_install.py --offline

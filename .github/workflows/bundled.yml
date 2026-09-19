@@ -1,0 +1,112 @@
+name: bundled runtime candidates
+
+# Maintainer-initiated qualification; this workflow does not publish releases.
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/bundled.yml'
+      - 'tools/**'
+      - 'bundles/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'Cargo.toml'
+      - 'build.rs'
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15-intel, ubuntu-22.04, ubuntu-22.04-arm, windows-2022]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install maintainer dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install octave
+      - name: Install maintainer dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends octave patchelf binutils
+      - name: Verify and extract upstream distribution (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          mkdir -p work
+          curl --fail --location --retry 3 https://ftpmirror.gnu.org/octave/windows/octave-11.3.0-w64.zip -o work/octave.zip
+          curl --fail --location --retry 3 https://ftpmirror.gnu.org/octave/windows/octave-11.3.0-w64.zip.sig -o work/octave.zip.sig
+          gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys B05F05B75D36644B
+          gpg --batch --verify work/octave.zip.sig work/octave.zip
+          python -m zipfile -e work/octave.zip work/windows
+      - name: Package and audit macOS runtime
+        if: runner.os == 'macOS'
+        run: python tools/package_macos.py --prefix "$(brew --prefix octave)" --destination work/runtime --archive work/artifacts/octave-runtime.tar.gz
+      - name: Package and audit Linux runtime
+        if: runner.os == 'Linux'
+        run: python tools/package_linux.py --destination work/runtime --archive work/artifacts/octave-runtime.tar.gz
+      - name: Package and audit Windows runtime
+        if: runner.os == 'Windows'
+        run: python tools/package_windows.py --prefix work/windows/octave-11.3.0-w64/mingw64 --destination work/runtime --archive work/artifacts/octave-runtime.tar.gz
+      - name: Configure the local candidate
+        shell: python
+        run: |
+          import json, os
+          from pathlib import Path
+          archive = Path('work/artifacts/octave-runtime.tar.gz').resolve()
+          metadata = json.loads(archive.with_suffix('.gz.json').read_text())
+          runtime = Path('work/runtime').resolve()
+          with open(os.environ['GITHUB_ENV'], 'a') as output:
+              for key, value in {
+                  'MOCKTAVE_BUNDLE_ARCHIVE': archive,
+                  'MOCKTAVE_BUNDLE_SHA256': metadata['sha256'],
+                  'MOCKTAVE_CACHE_DIR': Path('work/runtime-cache').resolve(),
+                  'MOCKTAVE_OCTAVE': runtime / metadata['executable'],
+                  'OCTAVE_HOME': runtime,
+                  'OCTAVE_EXEC_HOME': runtime,
+              }.items():
+                  print(f'{key}={value}', file=output)
+      - name: Test bundled API and existing examples
+        run: cargo test --no-default-features --features bundled
+      - name: Build a standalone Rust executable
+        run: cargo build --no-default-features --features bundled --example bundled
+      - name: Verify relocated executable without installed tools (Unix)
+        if: runner.os != 'Windows'
+        run: python tools/verify_standalone.py target/debug/examples/bundled
+      - name: Verify relocated executable without installed tools (Windows)
+        if: runner.os == 'Windows'
+        run: python tools/verify_standalone.py target/debug/examples/bundled.exe
+      - name: Verify downstream installation with the bundled feature
+        run: python tools/verify_feature_install.py --offline
+      - name: Enable corresponding-source repositories (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo python3 - <<'PY'
+          from pathlib import Path
+          paths = [Path('/etc/apt/sources.list'), *Path('/etc/apt/sources.list.d').glob('*.list')]
+          for path in paths:
+              if path.exists():
+                  text = path.read_text()
+                  source_lines = [line.replace('deb ', 'deb-src ', 1) for line in text.splitlines() if line.startswith('deb ')]
+                  path.write_text(text + '\n' + '\n'.join(source_lines) + '\n')
+          for path in Path('/etc/apt/sources.list.d').glob('*.sources'):
+              path.write_text(path.read_text().replace('Types: deb\n', 'Types: deb deb-src\n'))
+          PY
+          sudo apt-get update
+      - name: Collect corresponding sources and build recipes (Unix)
+        if: runner.os != 'Windows'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/collect_sources.py --runtime work/runtime --destination work/corresponding-sources --archive work/artifacts/octave-sources.tar.gz
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: octave-runtime-${{ matrix.os }}
+          path: work/artifacts/
+          compression-level: 0

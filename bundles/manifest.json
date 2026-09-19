@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "targets": {
+    "aarch64-apple-darwin": {
+      "archive": "octave-11.3.0-aarch64-apple-darwin.tar.gz",
+      "executable": "bin/octave-cli",
+      "external_dependencies": [
+        "Apple OS libraries and frameworks"
+      ],
+      "libraries": 79,
+      "minimum_macos": "14.0",
+      "octave_version": "11.3.0",
+      "schema": 1,
+      "scope": "Numerical CLI; GUI, plotting tools, package compilation and external helper programs are not bundled.",
+      "sha256": "e3fdbd2f836842f91339e1772b0af4b2406efa5f04a4ac8591ca5636264046b4",
+      "source_sha256": "b1b0c2937cf54831627e0045c6a30a4b52706a22397675eef46f01628e10aaeb",
+      "source_url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-11.3.0-aarch64-apple-darwin-sources.tar.gz",
+      "target": "aarch64-apple-darwin",
+      "url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-11.3.0-aarch64-apple-darwin.tar.gz"
+    },
+    "aarch64-unknown-linux-gnu": {
+      "archive": "octave-6.4.0-aarch64-unknown-linux-gnu.tar.gz",
+      "executable": "bin/octave-cli",
+      "external_dependencies": [
+        "Linux kernel and glibc"
+      ],
+      "libraries": 135,
+      "minimum_glibc": "2.35",
+      "octave_version": "6.4.0",
+      "schema": 1,
+      "scope": "Numerical CLI",
+      "sha256": "a1c5bc2b87cb2c6462e83e63184e9fefdd01557c81e6dac4fa3f5414dd0ca887",
+      "source_sha256": "a5a38c7f43cf8267c76dfb3fe8fc34c91058500dfe9b2d3a33c0368a3144f07e",
+      "source_url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-6.4.0-aarch64-unknown-linux-gnu-sources.tar.gz",
+      "target": "aarch64-unknown-linux-gnu",
+      "url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-6.4.0-aarch64-unknown-linux-gnu.tar.gz"
+    },
+    "x86_64-apple-darwin": {
+      "archive": "octave-11.3.0-x86_64-apple-darwin.tar.gz",
+      "executable": "bin/octave-cli",
+      "external_dependencies": [
+        "Apple OS libraries and frameworks"
+      ],
+      "libraries": 79,
+      "minimum_macos": "15.0",
+      "octave_version": "11.3.0",
+      "schema": 1,
+      "scope": "Numerical CLI; GUI, plotting tools, package compilation and external helper programs are not bundled.",
+      "sha256": "ca52aab06c1bd065f4bf80d3e0691785e5c33fd1c09f2f842b92aaf10b8d0511",
+      "source_sha256": "5d59b0522931c016bb67d8cffd8393394c32bd5d788947d325e1c6bc6e6f146e",
+      "source_url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-11.3.0-x86_64-apple-darwin-sources.tar.gz",
+      "target": "x86_64-apple-darwin",
+      "url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-11.3.0-x86_64-apple-darwin.tar.gz"
+    },
+    "x86_64-unknown-linux-gnu": {
+      "archive": "octave-6.4.0-x86_64-unknown-linux-gnu.tar.gz",
+      "executable": "bin/octave-cli",
+      "external_dependencies": [
+        "Linux kernel and glibc"
+      ],
+      "libraries": 136,
+      "minimum_glibc": "2.35",
+      "octave_version": "6.4.0",
+      "schema": 1,
+      "scope": "Numerical CLI",
+      "sha256": "e4409b45cc70eb68c719d7f146ee09e49e348815009ab61d0833ee2230fb40ef",
+      "source_sha256": "3cdc8cb8bb2ceb8c44ebb22119daa8f84ca337b930854c13404d447bf1f33660",
+      "source_url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-6.4.0-x86_64-unknown-linux-gnu-sources.tar.gz",
+      "target": "x86_64-unknown-linux-gnu",
+      "url": "https://github.com/cmccomb/mocktave/releases/download/octave-runtime-0.1.6/octave-6.4.0-x86_64-unknown-linux-gnu.tar.gz"
+    }
+  }
+}

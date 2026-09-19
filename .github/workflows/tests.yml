@@ -18,3 +18,22 @@ jobs:
         run: cargo build --verbose
       - name: Run tests
         run: cargo test --verbose
+  native:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Octave (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends octave
+      - name: Install Octave (macOS)
+        if: runner.os == 'macOS'
+        run: brew install octave
+      - name: Test native backend and documentation
+        run: cargo test --no-default-features --features native --verbose
+      - name: Check combined features
+        run: cargo check --features native --all-targets
+      - name: Test explicit native backend with both features enabled
+        run: cargo test --features native --test native

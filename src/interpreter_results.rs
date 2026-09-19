@@ -1,14 +1,11 @@
-use std::error::Error;
 use std::fmt::{Debug, Display, Formatter};
-use std::num::ParseFloatError;
 use std::ops::{Index, IndexMut};
 use std::{collections::HashMap, str::FromStr};
 
-use regex::{Captures, Match};
+use regex::Captures;
 
 use crate::OctaveType;
 
-use crate::octave_types::OctaveTryIntoError;
 use human_regex::{
     any, beginning, digit, end, exactly, multi_line_mode, named_capture, one_or_more, or,
     printable, text, whitespace, word, zero_or_more, zero_or_one,
@@ -85,7 +82,7 @@ impl Default for InterpreterResults {
 
 impl Display for InterpreterResults {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let mut keys = &mut self
+        let keys = &mut self
             .variables
             .keys()
             .cloned()
@@ -367,11 +364,14 @@ fn parse_matrix_capture(capture: Captures) -> (String, Vec<Vec<f64>>) {
     matrix = match capture.name("data") {
         None => matrix,
         Some(s) => {
-            if capture.get(2).unwrap().as_str().contains("diagonal") {
+            if capture
+                .get(0)
+                .unwrap()
+                .as_str()
+                .contains("\n# type: diagonal matrix\n")
+            {
                 s.as_str()
-                    .replacen('\n', " ", rows - 1)
-                    .replace('\n', "")
-                    .split(' ')
+                    .split_whitespace()
                     .map(|elem| match f64::from_str(elem) {
                         Ok(val) => val,
                         Err(_) => f64::NAN,
@@ -403,4 +403,25 @@ fn parse_matrix_capture(capture: Captures) -> (String, Vec<Vec<f64>>) {
     };
 
     (name, matrix)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_diagonal_matrix_entries() {
+        let result = InterpreterResults::from(
+            "# name: diagonal\n# type: diagonal matrix\n# rows: 3\n# columns: 3\n1\n2\n3\n\n"
+                .to_owned(),
+        );
+        assert_eq!(
+            result.get_matrix("diagonal"),
+            Some(vec![
+                vec![1.0, 0.0, 0.0],
+                vec![0.0, 2.0, 0.0],
+                vec![0.0, 0.0, 3.0]
+            ])
+        );
+    }
 }

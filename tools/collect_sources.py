@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -65,7 +66,10 @@ def macos(notices, sources):
             for patch in re.findall(r'\bfile "(Patches/[^"]+)"', content):
                 endpoint = "https://api.github.com/repos/Homebrew/homebrew-core/commits?path=" + quote(patch)
                 endpoint += "&until=" + quote(built_at) + "&per_page=1"
-                with urlopen(Request(endpoint, headers={"User-Agent": "mocktave-source-collector"}), timeout=60) as response:
+                headers = {"User-Agent": "mocktave-source-collector"}
+                if os.environ.get("GH_TOKEN"):
+                    headers["Authorization"] = "Bearer " + os.environ["GH_TOKEN"]
+                with urlopen(Request(endpoint, headers=headers), timeout=60) as response:
                     commits = json.load(response)
                 if not commits:
                     raise RuntimeError(f"Cannot resolve Homebrew patch at build time: {patch}")

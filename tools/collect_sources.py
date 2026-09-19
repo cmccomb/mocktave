@@ -21,6 +21,13 @@ def sha256(path):
 
 
 def download(entry, directory):
+    # Both upstream repositories resolve v1.1.7 to this same commit. The GitLab
+    # archive endpoint rate-limits downloads; pin the maintainer's GitHub mirror.
+    if entry["sha256"] == "7cf0034eca8f53449252f2fab863d855aedc0520ceb8d3f3fcd3bd601ce4c85e":
+        entry = dict(entry, original_url=entry["url"], original_sha256=entry["sha256"],
+                     url="https://github.com/MathisRosenhauer/libaec/archive/refs/tags/v1.1.7.tar.gz",
+                     sha256="26661a569a7def45a2e97fbbd09e0dc5bbb2f8ab1b41250c19e795559eec6fb2",
+                     upstream_commit="0c4c01463d2c64a112a61271d317b74efb660608")
     name = Path(urlparse(entry["url"]).path).name
     path = directory / (entry["sha256"][:16] + "-" + name)
     if not path.exists() or sha256(path) != entry["sha256"]:
